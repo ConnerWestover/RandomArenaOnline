@@ -8,6 +8,11 @@
 // Credit Player Sprite Sheet to http://knightyamato.deviantart.com/art/Blank-Sprite-Sheet-4-2-129192797 
 // another source of above sprite sheet http://orig12.deviantart.net/9b3c/f/2009/193/f/2/blank_sprite_sheet_4_2_by_knightyamato.png
 
+// 'HOST ONLY' to find functions that are specific to the host
+// 'EVERYONE' to find functions that are non specific
+// 'SERVER HERE' to find where server sends and recieves need to go
+// 'TODO' to find things that need to be done
+
 "use strict";
 
 // if app exists use the existing copy
@@ -16,22 +21,25 @@ var app = app || {};
 
 app.main = {
 	//  properties
-    WIDTH : 1200, 
-    HEIGHT: 800,
-    canvas: undefined,
-    ctx: undefined,
-   	lastTime: 0, // used by calculateDeltaTime() 
-    debug: true,
-	paused: false,
+  WIDTH : 1200,
+  HEIGHT: 800, 
+	
+  canvas: undefined, 
+  ctx: undefined,
+	
+  lastTime: 0, // used by calculateDeltaTime() 
+  debug: true,
+	paused: false, 
 	animationID: 0,
+	sound: undefined,
+	
 	gameState: undefined,
 	roundScore: 0,
 	totalScore: 0,
-	sound: undefined,
 	enemies: [],
 	numEnemies: 0,
-	staggerTime: 0,
-	endRound: 0,
+	staggerTime: 0, // delay between spawning
+	endRound: 0, 
 	timeBetweenWaves: 5000,
 	
 	bulletSize: 5,
@@ -44,20 +52,17 @@ app.main = {
 	itemsOnGround: [],
 	invert: false,
 	
-	
-	Emitter : undefined, // required = loaded by main.js
-	pulsar : undefined, 
-	exhaust : undefined,
-	
 	eBullActive: false,
 	eBullLethal: false,
 	
 	playerOnFire: false,
 	
+	// - TODO -
+	// - CREATE PLAYER ARRAY -
+	
 	
 	PLAYER: {
 		health: 10,
-		weapon: "none",
 		attackPower: 5,
 		defense: 1,
 		x: 420,
@@ -101,6 +106,7 @@ app.main = {
 	//  Part II - #2,3,4
 	doMousedown: function(e){
 	
+		// unpause on click
 		if (this.paused){
 			this.paused = false;
 			this.update;
@@ -110,9 +116,11 @@ app.main = {
 		var mouse = getMouse(e);
 
 		if(this.gameState == this.GAME_STATE.MAIN_MENU){
+			// If mouseclick on play button
 			if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
 			    mouse.y > this.HEIGHT/8 + 30  && mouse.y < this.HEIGHT/8 + 30 + this.HEIGHT/6){
 				
+				// initialize game
 				this.PLAYER = this.makePlayer();
 				this.totalScore = 0;
 				this.numEnemies = 0;
@@ -130,18 +138,22 @@ app.main = {
 				this.invert = false;
 				this.gameState = this.GAME_STATE.DEFAULT;
 				
-			} else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
+			} 
+			else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
 			    mouse.y > this.HEIGHT/8 + 30 + this.HEIGHT/6 + 15 && mouse.y < this.HEIGHT/8 + 30 + this.HEIGHT/6 + 15 + this.HEIGHT/6){
+				// if mouseclick instructions
 				
 				this.gameState = this.GAME_STATE.INSTRUCTIONS;
 				
 			} else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
 			    mouse.y > this.HEIGHT/8 + 30 + this.HEIGHT*2/6 + 30 && mouse.y < this.HEIGHT/8 + 30  + this.HEIGHT*2/6 + 30 + this.HEIGHT/6){
+				// if mouseclick options
 				
 				this.gameState = this.GAME_STATE.OPTIONS;
 				
 			} else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
 			    mouse.y > this.HEIGHT/8 + 30  + this.HEIGHT*3/6 + 45 && mouse.y < this.HEIGHT/8 + 30  + this.HEIGHT*3/6 + 45 + this.HEIGHT/6){
+				// if mouseclick about
 				
 				this.gameState = this.GAME_STATE.ABOUT;
 				
@@ -150,10 +162,10 @@ app.main = {
 					this.gameState == this.GAME_STATE.OPTIONS ||
 					this.gameState == this.GAME_STATE.ABOUT){
 			if (mouse.x < 130 && mouse.y < 60){
+				// mouseclick back to main menu
 				this.gameState = this.GAME_STATE.MAIN_MENU;
 			}
 		}
-		
 	},
 
     // methods
@@ -169,33 +181,27 @@ app.main = {
 		this.gameState = this.GAME_STATE.MAIN_MENU;
 		this.canvas.onmousedown = this.doMousedown.bind(this);
 		this.PLAYER = this.makePlayer();
+		
+		// - SERVER HERE -
+		// - MAKE OTHER PLAYER OBJECTS IF HOST
 		//debugger;
 		this.enemies = this.makeEnemy(this.numEnemies);
-		
-		this.pulsar = new this.Emitter();
-		this.pulsar.red = 255;
-		this.pulsar.minXspeed = this.pulsar.minYspeed = -0.25;
-		this.pulsar.maxXspeed = this.pulsar.maxYspeed = 0.25;
-		this.pulsar.lifetime = 500;
-		this.pulsar.expansionRate = 0.05;
-		this.pulsar.numParticles = 100;
-		this.pulsar.xRange = 1;
-		this.pulsar.yRange = 1;
-		this.pulsar.useCircles = true;
-		this.pulsar.useSquares = false;
-		this.pulsar.createParticles({x:this.PLAYER.x, y: this.PLAYER.y});
 		
 		this.reset();
 		
 		this.update();
 	},
 	
+	// - HOST ONLY -
 	reset: function(){
 		this.roundScore = 0;
 		this.numEnemies += 5;
 		this.enemies = this.makeEnemy(this.numEnemies);
+		// - SERVER HERE -
+		// - SEND RESET TO PARTY IF HOST
 	},
 	
+	// - EVERYONE -
 	update: function(){
 	 	this.animationID = requestAnimationFrame(this.update.bind(this));
 		
@@ -251,6 +257,10 @@ app.main = {
 			if (myKeys.keydown[myKeys.KEYBOARD.KEY_RIGHT]){
 				this.PLAYER.fireRight();
 			} 
+			// - SERVER HERE -
+			// - UPDATE OTHER PLAYER POSITIONS/STATUS IF HOST -
+			// - SEND ENEMY POSITIONS IF HOST -
+			// - SEND PLAYER POSITION/STATUS IF PARTY -
 			this.PLAYER.update(dt);
 		
 			if(this.gameState != this.GAME_STATE.ROUND_OVER){
@@ -266,24 +276,9 @@ app.main = {
 			this.drawItemText(this.ctx);
 			this.drawHUD(this.ctx);
 			
+			// - HOST ONLY -
 			this.checkTemporary();
 			this.checkEnemiesDead();
-			
-			// https://developer.mozilla.org/en-US/docs/Web/API/ImageData
-			var imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-			var data = imageData.data;
-			var length = data.length;
-			var width = imageData.width;
-			if(this.invert){
-				for (var i = 0; i < length; i +=4){
-					var red = data[i], green = data[i+1], blue = data[i+2];
-					data[i] = 255 - red; // set red value
-					data[i+1] = 255 - green; // set blue value
-					data[i+2] = 255 - blue; // set green value
-					// data[i+3] is the alpha but we’re leaving that alone
-				}
-			}
-			this.ctx.putImageData(imageData, 0, 0);
 		}
 		
 		if(this.gameState == this.GAME_STATE.ROUND_OVER){
@@ -299,31 +294,18 @@ app.main = {
 		}
 	},
 	
+	// - EVERYONE -
 	drawBackground: function(ctx){
 		ctx.fillStyle = "white"; 
 		ctx.strokeStyle = "black";
 		ctx.fillRect(0,0,this.WIDTH,this.HEIGHT); 
-		/*for (var i = 0; i < this.WIDTH; i+= this.WIDTH/20){
-			ctx.beginPath();
-			ctx.moveTo(i, 0);
-			ctx.lineTo(i, this.HEIGHT);
-			ctx.closePath();
-			ctx.stroke();
-		}
-		
-		for (var i = 0; i < this.HEIGHT; i+= this.HEIGHT/20){
-			ctx.beginPath();
-			ctx.moveTo(0, i);
-			ctx.lineTo(this.WIDTH, i);
-			ctx.closePath();
-			ctx.stroke();
-		}*/
 		var image = new Image();
 		image.src = app.IMAGES['ground'];
 		ctx.drawImage(image,					 					
 					0, 0, this.WIDTH, this.HEIGHT
 					);
 	},
+	
 	
 	drawMain: function(ctx){
 		if (this.gameState == this.GAME_STATE.MAIN_MENU){
@@ -397,7 +379,12 @@ app.main = {
 		
 	},
 	
+	// - EVERYONE -
 	drawHUD: function(ctx){
+		
+		// - SERVER HERE -
+		// - SEND SCORE IF HOST -
+		
 		ctx.save();
 		// draw score
       	// fillText(this.ctx,string, x, y, css, color)
@@ -411,14 +398,6 @@ app.main = {
 		ctx.fillRect(5,5,200 * (this.PLAYER.health/this.PLAYER.maxHealth),40);
 		ctx.strokeRect(5,5, 200, 40);
 		
-		if(this.PLAYER.gotHit == true){
-			this.pulsar.stopDraw = false;
-		}
-		else{
-			this.pulsar.stopDraw = true;
-		}
-		
-		this.pulsar.updateAndDraw(this.ctx, {x:this.PLAYER.x, y: this.PLAYER.y});
 		
 		ctx.fillStyle = "white";
 		if(this.gameState == this.GAME_STATE.BEGIN){
@@ -443,7 +422,7 @@ app.main = {
 		ctx.restore(); // NEW
 	},
 	
-	
+	// - HOST ONLY -
 	makePlayer: function(){
 		var makeBullet = function(x,y,xSpeed, ySpeed, maxDistance){
 			var move = function(dt){
@@ -585,20 +564,10 @@ app.main = {
 		
 		var movePlayerX = function(dt){
 			this.x += this.speed * dt;
-			if(dt > 0){
-				//this.direction = 2;
-			} else {
-				//this.direction = 3;
-			}
 		};
 		
 		var movePlayerY = function(dt){
 			this.y += this.speed * dt;
-			if(dt > 0){
-				//this.direction = 1;
-			} else {
-				//this.direction = 0;
-			}
 		};
 		
 		var update = function(dt){
@@ -613,7 +582,6 @@ app.main = {
 			
 			if (this.gotHit){
 				var d = new Date();
-				//this.pulsar.updateAndDraw(this.ctx, {x:this.PLAYER.x, y: this.PLAYER.y});
 				if (d.getTime() - this.timeGotHit > 1000){
 					this.gotHit = false;
 				}
@@ -637,8 +605,7 @@ app.main = {
 		p.moveX = movePlayerX;
 		p.moveY = movePlayerY;
 		p.health = 10;
-		p.maxHealth = 10;
-		p.weapon = "gun";
+		p.maxHealth = 10; // only used for drawing purposes
 		p.attackPower = 1;
 		p.defense = 1;
 		p.radius = 18;
@@ -670,6 +637,7 @@ app.main = {
 		return p;
 	},
 	
+	// - HOST ONLY -
 	makeEnemy: function(num){
 		
 		var makeBullet = function(x,y,xSpeed, ySpeed){
@@ -938,6 +906,7 @@ app.main = {
 		return array;
 	},
 	
+	// - EVERYONE -
 	drawShadows: function(ctx){
 		this.PLAYER.drawShadow(ctx);
 		for(var i = 0; i < this.enemies.length; i++){
@@ -948,6 +917,7 @@ app.main = {
 		}
 	},
 	
+	// - EVERYONE -
 	drawEnemy: function(ctx){
 		for(var i = 0; i < this.enemies.length; i++){
 			var e = this.enemies[i];
@@ -955,12 +925,9 @@ app.main = {
 			var d = new Date();
 			var n = d.getTime();
 			
+			// - HOST ONLY -
 			if((e.startTime + i*getRandom(500,1000)) <= n){
 				e.started = true;
-			}
-			
-			if(e.started == true){
-				//console.log(i);
 			}
 			
 			if(e.started == true && e.alive == true){
@@ -969,6 +936,7 @@ app.main = {
 		}
 	},
 	
+	// - HOST ONLY -
 	moveEnemy: function(dt){
 		for(var i = 0; i < this.enemies.length; i++){
 			var e = this.enemies[i];
@@ -978,6 +946,7 @@ app.main = {
 		}
 	},
 	
+	// - HOST ONLY -
 	enemyShoot: function(){
 		for(var i = 0; i < this.enemies.length; i++){
 		var e = this.enemies[i];
@@ -993,6 +962,7 @@ app.main = {
 		}
 	},
 	
+	// - EVERYONE -
 	fillText: function(ctx, string, x, y, css, color) {
 		ctx.save();
 		// https://developer.mozilla.org/en-US/docs/Web/CSS/font
@@ -1002,6 +972,7 @@ app.main = {
 		ctx.restore();
 	},
 	
+	// - HOST ONLY -
 	calculateDeltaTime: function(){
 		// what's with (+ new Date) below?
 		// + calls Date.valueOf(), which converts it from an object to a 	
@@ -1014,16 +985,19 @@ app.main = {
 		return 1/fps;
 	},
 	
-	
+	// - HOST ONLY -
 	//check collision 
 	checkForCollisions: function(){
+		// - TODO -
+		// - CHECK PLAYER ARRAY FOR COLLISIONS
+		
 		for (var j = 0; j < this.enemies.length; j++){
 			if (this.enemies[j].alive == false) continue; // if enemy isn't alive disregard
 			if (this.enemies[j].started == false) continue; // if enemy isn't started disregard
 			if (!this.PLAYER.gotHit && 
 				Math.abs(this.PLAYER.x - this.enemies[j].x) < this.PLAYER.radius + this.enemies[j].radius &&
 				Math.abs(this.PLAYER.y - this.enemies[j].y) < this.PLAYER.radius + this.enemies[j].radius){
-					this.PLAYER.health -= this.enemies[j].attackPower; //decrement					health
+					this.PLAYER.health -= this.enemies[j].attackPower; //decrement health
 					if (this.playerOnFire.active == true){
 						this.enemies[j].health -= player.attackPower * 2;
 						if (this.enemies[j].health <= 0){
@@ -1097,6 +1071,7 @@ app.main = {
 		}
 	},
 	
+	// - HOST ONLY - 
 	makeActiveItem: function(index, x, y){
 		var item = myTemporaryItems[index];
 		item.onGround = true;
@@ -1119,6 +1094,7 @@ app.main = {
 		this.itemsOnGround.push(item);
 	},
 	
+	// - EVERYONE -
 	drawOnGroundItems: function(ctx){
 		for (var i = 0; i < this.itemsOnGround.length; i++){
 			var item = this.itemsOnGround[i];
@@ -1132,6 +1108,7 @@ app.main = {
 		
 	},
 	
+	// - HOST ONLY -
 	checkTemporary: function(){
 		for(var i = 0; i < myTemporaryItems.length; i++){
 			if(myTemporaryItems[i].beingUsed != true) continue;
@@ -1142,13 +1119,14 @@ app.main = {
 		}
 	},
 	
+	// - HOST ONLY -
 	//check if all enemies have been killed
 	checkEnemiesDead: function(){
 		var dead = 0;
 		for (var j = 0; j < this.enemies.length; j++){
 			if(this.enemies[j].alive == false) dead++;
 		}
-		if(dead == this.numEnemies){
+		if(dead >= this.numEnemies){
 			this.gameState = this.GAME_STATE.ROUND_OVER;
 		}
 	},
@@ -1186,26 +1164,8 @@ app.main = {
 		//this.bgAudio.currentTime = 0;
 		this.sound.stopBGAudio();
 	},
-	manipulatePixels: function(ctx, canvas){
-		// https://developer.mozilla.org/en-US/docs/Web/API/ImageData
-		var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-		var data = imageData.data;
-		var length = data.length;
-		var width = imageData.width;
-		for (var i = 0; i < length; i +=4){
-		
-			if(invert){
-				var red = data[i], green = data[i+1], blue = data[i+2];
-				data[i] = 255 - red; // set red value
-				data[i+1] = 255 - green; // set blue value
-				data[i+2] = 255 - blue; // set green value
-				// data[i+3] is the alpha but we’re leaving that alone
-			}
-			
-		}
-		ctx.putImageData(imageData, 0, 0);
-	},
 	
+	// - EVERYONE -
 	drawItemText: function(ctx){
 		var d = new Date();
 		if (d.getTime() - this.timePutOnScreen < 2500){
