@@ -92,10 +92,10 @@ app.main = {
 		ROUND_OVER : 2,
 		REPEAT_LEVEL : 3,
 		//Menu States
-		MAIN_MENU : 4,
-		OPTIONS: 5,
-		INSTRUCTIONS: 6,
-		ABOUT: 7
+		//MAIN_MENU : 4,
+		//OPTIONS: 5,
+		//INSTRUCTIONS: 6,
+		//ABOUT: 7
 	},	
 
 	//  Part II - #2,3,4
@@ -109,7 +109,7 @@ app.main = {
 		
 		var mouse = getMouse(e);
 
-		if(this.gameState == this.GAME_STATE.MAIN_MENU){
+		/*if(this.gameState == this.GAME_STATE.MAIN_MENU){
 			if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
 			    mouse.y > this.HEIGHT/8 + 30  && mouse.y < this.HEIGHT/8 + 30 + this.HEIGHT/6){
 				
@@ -137,7 +137,7 @@ app.main = {
 				
 			} else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
 			    mouse.y > this.HEIGHT/8 + 30 + this.HEIGHT*2/6 + 30 && mouse.y < this.HEIGHT/8 + 30  + this.HEIGHT*2/6 + 30 + this.HEIGHT/6){
-				
+				F
 				this.gameState = this.GAME_STATE.OPTIONS;
 				
 			} else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
@@ -152,7 +152,7 @@ app.main = {
 			if (mouse.x < 130 && mouse.y < 60){
 				this.gameState = this.GAME_STATE.MAIN_MENU;
 			}
-		}
+		}*/
 		
 	},
 
@@ -188,6 +188,9 @@ app.main = {
 		this.reset();
 		
 		this.update();
+      
+      ctx.canvas.width  = window.innerWidth;
+      ctx.canvas.height = window.innerHeight;
 	},
 	
 	reset: function(){
@@ -215,7 +218,7 @@ app.main = {
 			this.drawBackground(this.ctx);
 		}
 		
-		this.drawMain(this.ctx);
+		//this.drawMain(this.ctx);
 
 		//GamePlay Drawing Happens
 		if (this.gameState == this.GAME_STATE.DEFAULT || this.gameState == this.GAME_STATE.ROUND_OVER){
@@ -290,7 +293,8 @@ app.main = {
 			this.drawHUD(this.ctx);
 			if(myKeys.keydown[myKeys.KEYBOARD.KEY_SPACE]){
 				if (this.PLAYER.health <= 0){
-					this.gameState = this.GAME_STATE.MAIN_MENU;
+				  //TODO: End Game Score kick to lobby
+                  //this.gameState = this.GAME_STATE.MAIN_MENU;
 				} else {
 					this.gameState = this.GAME_STATE.DEFAULT;
 					this.reset();
@@ -325,7 +329,7 @@ app.main = {
 					);
 	},
 	
-	drawMain: function(ctx){
+	/*drawMain: function(ctx){
 		if (this.gameState == this.GAME_STATE.MAIN_MENU){
 			ctx.save();
 			
@@ -395,7 +399,7 @@ app.main = {
 			ctx.restore();
 		}
 		
-	},
+	},*/
 	
 	drawHUD: function(ctx){
 		ctx.save();

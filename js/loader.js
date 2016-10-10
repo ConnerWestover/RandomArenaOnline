@@ -11,7 +11,7 @@ the game will be properties of app.
 var app = app || {};
 
 
-window.onload = function(){
+const GameStart = () =>{
 	console.log("window.onload called");
 	
 	app.queue = new createjs.LoadQueue(false);
@@ -37,7 +37,7 @@ window.onload = function(){
 	 {id: "plant", src:"media/plant3.png"},
 	 {id: "ground", src:"media/grass.png"}
 	]);
-}
+};
 
 window.onblur = function(){
 	console.log("blur at " + Date());
