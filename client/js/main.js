@@ -198,13 +198,6 @@ app.main = {
 		}
 		
 		this.update();
-      
-<<<<<<< HEAD:client/js/main.js
-      
-=======
-    ctx.canvas.width  = window.innerWidth;
-    ctx.canvas.height = window.innerHeight;
->>>>>>> origin/master:js/main.js
 	},
 	
 	// - HOST ONLY -
