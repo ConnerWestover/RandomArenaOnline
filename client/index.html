@@ -51,6 +51,7 @@
     var WIDTH = 1200;
     var HEIGHT = 800;
     var host = false;
+    var ready = false;
     var failedToHostRoom = false;
     var failedToFindRoom = true;
     var reason = ""
@@ -100,16 +101,18 @@
           room = document.getElementById('RoomName').value;
           host = true;
           failedToHostRoom = false;
+          index = 0;
           playersInLobby[0] = {
                                 username: username,
-                                index: 0,
+                                index: index,
                                 host: host,
                                 ready: false,
                                 startingClass: startingClass
-                              }
+                              };
         } else {
           failedToHostRoom = true;
         }
+        update();
       });
       
       socket.on('ReceiveFindRoomCheck', (data)=>{
@@ -119,11 +122,23 @@
           failedToFindRoom = false;
           room = document.getElementById('RoomName').value;
           index = data.index
+          playersInLobby = data.playersInLobby;
+          playersInLobby[0] = host;
         } else {
           failedToFindRoom = true;
           reason = data.reason;
         }
-        
+        update();
+      });
+      
+      socket.on('NewRoomMember', (players) =>{
+        playersInLobby = players;
+        update();
+      });
+      
+      socket.on('UserUpdate', (players) =>{
+        playersInLobby = players;
+        update();
       });
     };
     
@@ -285,16 +300,16 @@
             host: host,
             ready: false,
             startingClass: startingClass
-          });
+          }, 0);
           
           if(playersInLobby[1] != undefined){
-           drawUserInLobby(playersInLobby[1]);
+           drawUserInLobby(playersInLobby[1], 1);
           }
           if(playersInLobby[2] != undefined){
-            drawUserInLobby(playersInLobby[2]);
+            drawUserInLobby(playersInLobby[2], 2);
           }
           if(playersInLobby[3] != undefined){
-            drawUserInLobby(playersInLobby[3]);
+            drawUserInLobby(playersInLobby[3, 3]);
           }
           
 		  ctx.restore();
@@ -315,55 +330,55 @@
           ctx.strokeRect(WIDTH/16, HEIGHT*7/10, WIDTH*7/8, HEIGHT*3/20);
           
           if(playersInLobby[0] != undefined){
-           drawUserInLobby(playersInLobby[0]);
+           drawUserInLobby(playersInLobby[0], 0);
           }
           if(playersInLobby[1] != undefined){
-           drawUserInLobby(playersInLobby[1]);
+           drawUserInLobby(playersInLobby[1], 1);
           }
           if(playersInLobby[2] != undefined){
-            drawUserInLobby(playersInLobby[2]);
+            drawUserInLobby(playersInLobby[2], 2);
           }
           if(playersInLobby[3] != undefined){
-            drawUserInLobby(playersInLobby[3]);
+            drawUserInLobby(playersInLobby[3], 3);
           }
 		  ctx.restore();
         }
     };
     
-    const drawUserInLobby = (user) =>{
+    const drawUserInLobby = (user, i) =>{
       if (user.host){
         //UserName
-        fillText(ctx, username + " - Host", WIDTH/16 + 20, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+        fillText(ctx, username + " - Host", WIDTH/16 + 20, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
       } else if (user.ready){
         //UserName
-        fillText(ctx, username + " - Ready", WIDTH/16 + 20, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+        fillText(ctx, username + " - Ready", WIDTH/16 + 20, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
       } else {
-        fillText(ctx, username + " - Not Ready", WIDTH/16 + 20, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+        fillText(ctx, username + " - Not Ready", WIDTH/16 + 20, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
       }
 
       //Class Box 1
-      ctx.strokeRect(WIDTH*11/16, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      ctx.strokeRect(WIDTH*11/16, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
       if(user.startingClass == 1){
         ctx.fillStyle = "red";
-        ctx.fillRect(WIDTH*11/16, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+        ctx.fillRect(WIDTH*11/16, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
       }
-      fillText(ctx, "S", WIDTH*91/128, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+      fillText(ctx, "S", WIDTH*91/128, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
 
       //Class Box 2
-      ctx.strokeRect(WIDTH*12/16 + 20, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      ctx.strokeRect(WIDTH*12/16 + 20, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
       if(user.startingClass == 2){
         ctx.fillStyle = "blue";
-        ctx.fillRect(WIDTH*12/16 + 20, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+        ctx.fillRect(WIDTH*12/16 + 20, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
       }
-      fillText(ctx, "P", WIDTH*25/32, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+      fillText(ctx, "P", WIDTH*25/32, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
 
       //Class Box 3
-      ctx.strokeRect(WIDTH*13/16 + 40, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      ctx.strokeRect(WIDTH*13/16 + 40, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
       if(user.startingClass == 3){
         ctx.fillStyle = "yellow";
-        ctx.fillRect(WIDTH*13/16 + 40, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+        ctx.fillRect(WIDTH*13/16 + 40, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
       }
-      fillText(ctx, "R", WIDTH*55/64, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+      fillText(ctx, "R", WIDTH*55/64, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
     }
     
     const fillText = (ctx, string, x, y, css, color) => {
@@ -429,20 +444,41 @@
             socket.emit('CreateRoomWithName', { name:document.getElementById('RoomName').value,
                                                host: {
                                                   username: username,
-                                                  index: 0,
+                                                  index: index,
                                                   host: host,
                                                   ready: false,
                                                   startingClass: startingClass
-                                               });
+                                               }});
           }
         }
      else if (state == MenuState.LOBBY_BY_NAME){
           if(mouse.y < HEIGHT*2/5 + 40 && mouse.y > HEIGHT*2/5 - 40 && mouse.x > WIDTH/2 - 150 && mouse.x < WIDTH/2 + 150){
-            socket.emit('FindRoomWithName', document.getElementById('RoomName').value)
+            socket.emit('FindRoomWithName', {
+                                              name: document.getElementById('RoomName').value,
+                                              user:{
+                                                username: username,
+                                                index: index,
+                                                host: host,
+                                                ready: false,
+                                                startingClass: startingClass
+                                              }
+                                            });
           }
         }
         else if (state >= 8){
-          
+          //WIDTH*11/16, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20
+          if(mouse.x > WIDTH*11/16 && mouse.x < WIDTH*12/16){
+            if(mouse.y > HEIGHT*((2 * index) + 1)/10 + HEIGHT*1/40 && mouse.y < HEIGHT*((2 * index) + 1)/10 + HEIGHT*3/40){
+              startingClass = 1;
+              playersInLobby[index] = {
+                username: username,
+                index: index,
+                startingClass: startingClass,
+                host: host,
+                ready: ready
+              };
+            }
+          }
         }
           
         if ( state != MenuState.MAIN_MENU){

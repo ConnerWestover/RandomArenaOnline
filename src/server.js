@@ -27,11 +27,14 @@ const onSetupSockets = (sock) => {
         success: false
        });
     } else {
+      
       roomNames[data.name] = {
         name: data.name,
         playerCount: 1,
-        host: data.user
+        host: data.user,
+        playersInLobby: {}
       };
+      roomNames[data.name].playersInLobby[0] = data.userAgent
        socket.join(data.name);
        socket.emit('ReceiveHostRoomCheck',{
         success: true
@@ -39,26 +42,36 @@ const onSetupSockets = (sock) => {
     }
   });
 
-  socket.on('FindRoomWithName', (name) => {
-    if(roomNames[name] == undefined){
+  socket.on('FindRoomWithName', (data) => {
+    if(roomNames[data.name] == undefined){
        
        socket.emit('ReceiveFindRoomCheck',{
         success: false,
         reason: "THAT ROOM DOES NOT EXIST"
        });
-    } else if (roomNames[name].playerCount < 4) {
-       socket.join(name);
-      roomNames[name].playerCount += 1;
+    } else if (roomNames[data.name].playerCount < 4) {
+       socket.join(data.name);
+      roomNames[data.name].playersInLobby[roomNames[data.name].playerCount] = data.user;
        socket.emit('ReceiveFindRoomCheck',{
         success: true,
-        index: roomNames[name].playerCount
-       });     
+        index: roomNames[data.name].playerCount,
+        playersInLobby: roomNames[data.name].playersInLobby,
+        host: roomNames[data.name].host
+       });
+      roomNames[data.name].playerCount += 1;
+      socket.to(data.name).emit('NewRoomMember', roomNames[data.name].playersInLobby)
+      
     } else {
       socket.emit('ReceiveFindRoomCheck',{
         success: true,
         reason: "THAT ROOM IS FULL"
        }); 
     }
+  });
+  
+  socket.on('UpdateUsers', (data) => {
+    roomNames[data.name].playersInLobby = data.players;
+    socket.to(data.name).emit('UserUpdate', data.players);
   });
 
 };
