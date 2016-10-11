@@ -57,8 +57,10 @@ app.main = {
 	
 	playerOnFire: false,
 	
-	// - TODO -
-	// - CREATE PLAYER ARRAY -
+	amHost: false,
+	numPlayers: 0,
+	players: [],
+	playersDead: 0,
 	
 	
 	PLAYER: {
@@ -178,18 +180,31 @@ app.main = {
 		this.totalScore = 0;
 		this.gameState = this.GAME_STATE.MAIN_MENU;
 		this.canvas.onmousedown = this.doMousedown.bind(this);
-		this.PLAYER = this.makePlayer();
 		
 		// - SERVER HERE -
-		// - MAKE OTHER PLAYER OBJECTS IF HOST
-		//debugger;
-		this.enemies = this.makeEnemy(this.numEnemies);
+		// - NEED NUMBER OF PLAYERS -
+		if (amHost == true){
+			for(var i = 0; i < numPlayers; i++){
+				this.players.add(this.makePlayer());
+			}
+		}
 		
-		this.reset();
+		if(amHost == true){
+			this.enemies = this.makeEnemy(this.numEnemies);
+		}
+		
+		if(amHost == true){
+			this.reset();
+		}
 		
 		this.update();
       
+<<<<<<< HEAD:client/js/main.js
       
+=======
+    ctx.canvas.width  = window.innerWidth;
+    ctx.canvas.height = window.innerHeight;
+>>>>>>> origin/master:js/main.js
 	},
 	
 	// - HOST ONLY -
@@ -225,8 +240,10 @@ app.main = {
 
 		//GamePlay Drawing Happens
 		if (this.gameState == this.GAME_STATE.DEFAULT || this.gameState == this.GAME_STATE.ROUND_OVER){
-			this.moveEnemy(dt);
-			this.checkForCollisions();
+			if(amHost == true){
+				this.moveEnemy(dt);
+				this.checkForCollisions();
+			}
 			
 			//powers check
 			if(this.eBullActive == true){
@@ -277,8 +294,10 @@ app.main = {
 			this.drawHUD(this.ctx);
 			
 			// - HOST ONLY -
-			this.checkTemporary();
-			this.checkEnemiesDead();
+			if(amHost == true){
+				this.checkTemporary();
+				this.checkEnemiesDead();
+			}
 		}
 		
 		if(this.gameState == this.GAME_STATE.ROUND_OVER){
@@ -289,7 +308,9 @@ app.main = {
                   //this.gameState = this.GAME_STATE.MAIN_MENU;
 				} else {
 					this.gameState = this.GAME_STATE.DEFAULT;
-					this.reset();
+					if(amHost == true){
+						this.reset();
+					}
 				}
 			}
 		}
@@ -907,8 +928,12 @@ app.main = {
 	},
 	
 	// - EVERYONE -
+	// - TODO -
+	// - Player needs to draw their own shadows
 	drawShadows: function(ctx){
-		this.PLAYER.drawShadow(ctx);
+		for(var p = 0; p < this.players.length; p++){
+			players[p].drawShadow(ctx);
+		}
 		for(var i = 0; i < this.enemies.length; i++){
 			var e = this.enemies[i];
 			if(e.started == true && e.alive == true){
@@ -925,9 +950,10 @@ app.main = {
 			var d = new Date();
 			var n = d.getTime();
 			
-			// - HOST ONLY -
-			if((e.startTime + i*getRandom(500,1000)) <= n){
-				e.started = true;
+			if(amHost == true){
+				if((e.startTime + i*getRandom(500,1000)) <= n){
+					e.started = true;
+				}
 			}
 			
 			if(e.started == true && e.alive == true){
@@ -988,83 +1014,89 @@ app.main = {
 	// - HOST ONLY -
 	//check collision 
 	checkForCollisions: function(){
-		// - TODO -
-		// - CHECK PLAYER ARRAY FOR COLLISIONS
+		// - SERVER HERE -
+		// - SEND GAME STATE CHANGE IF ROUND OVER TO PARTY -
 		
-		for (var j = 0; j < this.enemies.length; j++){
-			if (this.enemies[j].alive == false) continue; // if enemy isn't alive disregard
-			if (this.enemies[j].started == false) continue; // if enemy isn't started disregard
-			if (!this.PLAYER.gotHit && 
-				Math.abs(this.PLAYER.x - this.enemies[j].x) < this.PLAYER.radius + this.enemies[j].radius &&
-				Math.abs(this.PLAYER.y - this.enemies[j].y) < this.PLAYER.radius + this.enemies[j].radius){
-					this.PLAYER.health -= this.enemies[j].attackPower; //decrement health
-					if (this.playerOnFire.active == true){
-						this.enemies[j].health -= player.attackPower * 2;
-						if (this.enemies[j].health <= 0){
-							this.enemies[j].alive = false;
+		for (var p = 0; p < this.players.length; p++){
+			for (var j = 0; j < this.enemies.length; j++){
+				if (this.enemies[j].alive == false) continue; // if enemy isn't alive disregard
+				if (this.enemies[j].started == false) continue; // if enemy isn't started disregard
+				if (!this.player[p].gotHit && 
+					Math.abs(this.player[p].x - this.enemies[j].x) < this.player[p].radius + this.enemies[j].radius &&
+					Math.abs(this.player[p].y - this.enemies[j].y) < this.player[p].radius + this.enemies[j].radius){
+						this.player[p].health -= this.enemies[j].attackPower; //decrement health
+							if (this.enemies[j].health <= 0){
+								this.enemies[j].alive = false;
+							}
 						}
-					}
-					this.sound.playPlayerHurtEffect();
-					if(this.PLAYER.health <= 0){ //make sure health can't go negative and sets round to over
-						this.PLAYER.health = 0;
-						this.roundScore = this.totalScore;
-						this.gameState = this.GAME_STATE.ROUND_OVER;
-					}
-					var d = new Date();
-					this.PLAYER.timeGotHit = d.getTime();
-					this.PLAYER.gotHit = true;
-				}
-			if(this.eBullActive == true){
-				for(var i = 0; i < this.enemies[j].bullets.length; i++){
-					var b = this.enemies[j].bullets[i];
-					if (Math.abs(b.x - this.PLAYER.x) < b.radius + this.PLAYER.radius && Math.abs(b.y - this.PLAYER.y) < b.radius + this.PLAYER.radius){
-						b.live = false;
-						if(this.eBullLethal == true){
-							this.PLAYER.health -= 1;
-							if(this.PLAYER.health <= 0){ //make sure health can't go negative and sets round to over
-								this.PLAYER.health = 0;
+						this.sound.playPlayerHurtEffect();
+						if(this.player[p].health <= 0){ //make sure health can't go negative and sets round to over
+							this.player[p].health = 0;
+							playersDead ++;
+							if(playersDead == this.players.length){
 								this.roundScore = this.totalScore;
 								this.gameState = this.GAME_STATE.ROUND_OVER;
 							}
-							var d = new Date();
-							this.PLAYER.timeGotHit = d.getTime();
-							this.PLAYER.gotHit = true;
 						}
-					}
-				}
-			}
-			for (var i = 0; i < this.PLAYER.bullets.length; i++){
-				var e = this.enemies[j];
-				var b = this.PLAYER.bullets[i];
-				if (Math.abs(b.x - e.x) < b.radius + e.radius && Math.abs(b.y - e.y) < b.radius + e.radius){
-					e.health -= b.power;
-					this.sound.playEnemyHurtEffect();
-					b.live = false;
-					if(e.health <= 0){
-						e.alive = false;
-						this.totalScore = this.totalScore + 1;
-						if(getRandom(0,100) > 40){
-							var x = Math.floor(getRandom(0, myTemporaryItems.length));
-							this.makeActiveItem(x, e.x,e.y);								
-						}
-					}
-				}
-			}
-			
-			//ITEMS
-			for (var i = 0; i < this.itemsOnGround.length; i++){
-				if (Math.abs(this.PLAYER.x - this.itemsOnGround[i].x) < this.PLAYER.radius + this.itemsOnGround[i].radius &&
-					Math.abs(this.PLAYER.y - this.itemsOnGround[i].y) < this.PLAYER.radius + this.itemsOnGround[i].radius){
-					if(this.itemsOnGround[i].active != true && this.itemsOnGround[i].onGround == true){
-						this.itemsOnGround[i].onGround = false;
-						this.itemsOnGround[i].doEffect(this.PLAYER);
-						
-						this.itemText = this.itemsOnGround[i].name;
-						this.descriptionText = this.itemsOnGround[i].description;
 						var d = new Date();
-						this.timePutOnScreen = d.getTime();
-					} else {
-						this.itemsOnGround.splice(i, 1);
+						this.player[p].timeGotHit = d.getTime();
+						this.player[p].gotHit = true;
+					}
+				if(this.eBullActive == true){
+					for(var i = 0; i < this.enemies[j].bullets.length; i++){
+						var b = this.enemies[j].bullets[i];
+						if (Math.abs(b.x - this.player[p].x) < b.radius + this.player[p].radius && Math.abs(b.y - this.player[p].y) < b.radius + this.player[p].radius){
+							b.live = false;
+							if(this.eBullLethal == true){
+								this.player[p].health -= 1;
+								if(this.player[p].health <= 0){ //make sure health can't go negative and sets round to over
+									this.player[p].health = 0;
+									playersDead ++;
+									if(playersDead == this.players.length){
+										this.roundScore = this.totalScore;
+										this.gameState = this.GAME_STATE.ROUND_OVER;
+									}
+								}
+								var d = new Date();
+								this.player[p].timeGotHit = d.getTime();
+								this.player[p].gotHit = true;
+							}
+						}
+					}
+				}
+				for (var i = 0; i < this.PLAYER.bullets.length; i++){
+					var e = this.enemies[j];
+					var b = this.player[p].bullets[i];
+					if (Math.abs(b.x - e.x) < b.radius + e.radius && Math.abs(b.y - e.y) < b.radius + e.radius){
+						e.health -= b.power;
+						this.sound.playEnemyHurtEffect();
+						b.live = false;
+						if(e.health <= 0){
+							e.alive = false;
+							this.totalScore = this.totalScore + 1;
+							if(getRandom(0,100) > 40){
+								var x = Math.floor(getRandom(0, myTemporaryItems.length));
+								this.makeActiveItem(x, e.x,e.y);								
+							}
+						}
+					}
+				}
+				
+				//ITEMS
+				for (var i = 0; i < this.itemsOnGround.length; i++){
+					if (Math.abs(this.player[p].x - this.itemsOnGround[i].x) < this.player[p].radius + this.itemsOnGround[i].radius &&
+						Math.abs(this.player[p].y - this.itemsOnGround[i].y) < this.player[p].radius + this.itemsOnGround[i].radius){
+						if(this.itemsOnGround[i].active != true && this.itemsOnGround[i].onGround == true){
+							this.itemsOnGround[i].onGround = false;
+							this.itemsOnGround[i].doEffect(this.PLAYER);
+							
+							this.itemText = this.itemsOnGround[i].name;
+							this.descriptionText = this.itemsOnGround[i].description;
+							var d = new Date();
+							this.timePutOnScreen = d.getTime();
+						} else {
+							this.itemsOnGround.splice(i, 1);
+						}
 					}
 				}
 			}
