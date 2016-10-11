@@ -189,8 +189,7 @@ app.main = {
 		
 		this.update();
       
-      ctx.canvas.width  = window.innerWidth;
-      ctx.canvas.height = window.innerHeight;
+      
 	},
 	
 	// - HOST ONLY -

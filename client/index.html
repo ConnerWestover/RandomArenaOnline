@@ -1,0 +1,485 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    *{text-align:center;}
+    canvas{border:none;}
+    #audioControls{ display:none;}
+    #username, #roomName{
+      font-style: 'Permanent Marker';
+      z-index:101; 
+      position:absolute; 
+      top: window.innerHeight/2;
+      left: window.innerWidth/2;
+      display:none;
+      font-size: 30px; 
+    }
+  </style>
+  
+  <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+  <script src ="/socket.io/socket.io.js"></script>
+	
+  <script type="text/javascript"> //Font Script
+     WebFontConfig = {
+		google: { families: [ 'Permanent+Marker::latin' ] }
+	  };
+	  (function() {
+		var wf = document.createElement('script');
+		wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+		  '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+		wf.type = 'text/javascript';
+		wf.async = 'true';
+		var s = document.getElementsByTagName('script')[0];
+		s.parentNode.insertBefore(wf, s);
+	  })(); 
+  </script>
+  <script type = "text/javascript">
+    
+    "use strict";
+    let socket;
+    
+    
+    
+    var room = "";
+    var startingClass = 0;
+    var index = 0;
+    var username = "";
+    var canvas = undefined;
+    var ctx = undefined;
+    var WIDTH = 1200;
+    var HEIGHT = 800;
+    var host = false;
+    var failedToHostRoom = false;
+    var failedToFindRoom = true;
+    var reason = ""
+    var playersInLobby = {};
+
+    var MenuState = {
+      MAIN_MENU : 0,
+      OPTIONS: 1,
+      INSTRUCTIONS: 2,
+      ABOUT: 3,
+      LOBBY: 4,
+      LOBBY_HOST: 5,
+      LOBBY_FINDING: 6,
+      LOBBY_BY_NAME: 7,
+      IN_LOBBY_HOST: 8,
+      IN_LOBBY_MEMBER: 9
+    };
+    
+    var state = MenuState.MAIN_MENU;
+    
+    const init = () =>{
+      socket = io.connect();
+      window.addEventListener("click", onMouseUp, true);
+      canvas = document.querySelector('canvas');
+      ctx = canvas.getContext("2d");
+      ctx.canvas.width  = window.innerWidth - 20;
+      ctx.canvas.height = window.innerHeight - 20;
+      WIDTH = window.innerWidth - 20;
+      HEIGHT = window.innerHeight - 20;
+      update();
+      window.onresize=function(){
+        ctx.canvas.width  = window.innerWidth - 20;
+        ctx.canvas.height = window.innerHeight - 20;
+        WIDTH = window.innerWidth - 20;
+        HEIGHT = window.innerHeight - 20;
+        update();
+      };
+      
+      setupSockets();
+    };
+    
+    //Socket responses for finding rooms
+    const setupSockets = () =>{
+      socket.on('ReceiveHostRoomCheck', (data)=>{
+        if(data.success){
+          state = MenuState.IN_LOBBY_HOST;
+          room = document.getElementById('RoomName').value;
+          host = true;
+          failedToHostRoom = false;
+          playersInLobby[0] = {
+                                username: username,
+                                index: 0,
+                                host: host,
+                                ready: false,
+                                startingClass: startingClass
+                              }
+        } else {
+          failedToHostRoom = true;
+        }
+      });
+      
+      socket.on('ReceiveFindRoomCheck', (data)=>{
+        
+        if(data.success){
+          state = MenuState.IN_LOBBY_MEMBER;
+          failedToFindRoom = false;
+          room = document.getElementById('RoomName').value;
+          index = data.index
+        } else {
+          failedToFindRoom = true;
+          reason = data.reason;
+        }
+        
+      });
+    };
+    
+    const update = () =>{     
+      ctx.clearRect(0,0,WIDTH,HEIGHT);
+       var form = document.getElementById('username');
+      form.style.display = 'none';
+      var form2 = document.getElementById('roomName');
+          form2.style.display = 'none';
+      if (state == MenuState.MAIN_MENU){
+		ctx.save();
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(WIDTH/8, HEIGHT/8 + 30, WIDTH*3/4, HEIGHT/6);
+        ctx.strokeRect(WIDTH/8, HEIGHT/8 + 30 + HEIGHT/6 + 15, WIDTH*3/4, HEIGHT/6);
+        ctx.strokeRect(WIDTH/8, HEIGHT/8 + 30  + HEIGHT*2/6 + 30, WIDTH*3/4, HEIGHT/6);
+        ctx.strokeRect(WIDTH/8, HEIGHT/8 + 30  + HEIGHT*3/6 + 45, WIDTH*3/4, HEIGHT/6);
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        fillText(ctx, "Down The Rabbit Hole", this.WIDTH/2, 50, "50pt Permanent Marker", "red");
+        fillText(ctx, "Play", this.WIDTH/2, this.HEIGHT/8 + 30+ this.HEIGHT/11, "50pt Permanent Marker", "black");
+        fillText(ctx, "Instructions", this.WIDTH/2, this.HEIGHT/6 + 30 + this.HEIGHT/4 - 10, "50pt Permanent Marker", "black");
+        fillText(ctx, "Options", this.WIDTH/2, this.HEIGHT*2/6 + 30 + this.HEIGHT/4 + 5, "50pt Permanent Marker", "black");
+        fillText(ctx, "About", this.WIDTH/2, this.HEIGHT*3/6 + 30 + this.HEIGHT/4+ 20, "50pt Permanent Marker", "black");
+	  ctx.restore();
+		} 
+        else if (state == MenuState.INSTRUCTIONS){
+			ctx.save();
+			ctx.strokeStyle = "black";
+			ctx.fillStyle = "black";
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.lineWidth = 4;
+			fillText(ctx, "Instructions", this.WIDTH/2, this.HEIGHT/8, "60pt Permanent Marker", "black");
+			fillText(ctx, "WASD to move the player", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
+			fillText(ctx, "Arrow Keys to fire bullets", this.WIDTH/2, this.HEIGHT*2/5 - 40, "30pt Permanent Marker", "black");
+			fillText(ctx, "Defeat anyone who enters the arena", this.WIDTH/2, this.HEIGHT*2/5 + 70, "30pt Permanent Marker", "black");
+			fillText(ctx, "Gain points by defeating enemies", this.WIDTH/2, this.HEIGHT*2/5 + 110, "30pt Permanent Marker", "black");
+			fillText(ctx, "Pickup weapons by walking over them", this.WIDTH/2, this.HEIGHT*2/5 + 200, "30pt Permanent Marker", "black");
+			fillText(ctx, "Fight until you drop", this.WIDTH/2, this.HEIGHT*2/5 + 240, "30pt Permanent Marker", "black");
+			
+			fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
+			ctx.strokeRect(0,0,130,60);
+			
+			ctx.restore();
+		} 
+        else if (state == MenuState.OPTIONS){
+			ctx.save();
+			ctx.strokeStyle = "black";
+			ctx.fillStyle = "black";
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.lineWidth = 4;
+			fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
+			fillText(ctx, "Options", this.WIDTH/2, this.HEIGHT/8, "60pt Permanent Marker", "black");
+			fillText(ctx, "This section is currently", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
+			fillText(ctx, "under construction", this.WIDTH/2, this.HEIGHT*2/5+40, "30pt Permanent Marker", "black");
+			ctx.strokeRect(0,0,130,60);
+			ctx.restore();
+		} 
+        else if (state == MenuState.ABOUT){
+			ctx.save();
+			ctx.strokeStyle = "black";
+			ctx.fillStyle = "black";
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.lineWidth = 4;
+			fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
+			fillText(ctx, "About", this.WIDTH/2, this.HEIGHT/8, "60pt Permanent Marker", "black");
+			fillText(ctx, "Down The Rabbit Hole was created by:", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
+			fillText(ctx, "Alexander Huffman", this.WIDTH/2, this.HEIGHT*2/5+40, "30pt Permanent Marker", "black");
+			fillText(ctx, "Conner Westover", this.WIDTH/2, this.HEIGHT*2/5+80, "30pt Permanent Marker", "black");
+			ctx.strokeRect(0,0,130,60);
+			ctx.restore();
+		} 
+        else if (state == MenuState.LOBBY){
+          var form = document.getElementById('username');
+          form.style.display = 'block';
+          form.style.left = (6*WIDTH/16).toString() + "px";
+          form.style.top = (HEIGHT/4).toString() + "px";
+          ctx.save();
+          ctx.strokeStyle = "black";
+		  ctx.fillStyle = "black";
+		  ctx.textAlign = "center";
+		  ctx.textBaseline = "middle";
+          ctx.strokeRect(0,0,130,60);
+          fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
+          fillText(ctx, "Host A Game", this.WIDTH/4, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
+          fillText(ctx, "Find A Game", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
+          fillText(ctx, "Join A Game", 3*this.WIDTH/4, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
+          ctx.strokeRect(WIDTH/4 - 150, HEIGHT*2/5 - 40, 300, 80);
+          ctx.strokeRect(WIDTH/2 - 150, HEIGHT*2/5 - 40, 300, 80);
+          ctx.strokeRect(WIDTH*3/4 - 150, HEIGHT*2/5 - 40, 300, 80);
+          ctx.restore();
+        } 
+        else if (state == MenuState.LOBBY_HOST){
+          var form = document.getElementById('roomName');
+          form.style.display = 'block';
+          form.style.left = (6*WIDTH/16).toString() + "px";
+          form.style.top = (HEIGHT/4).toString() + "px";
+          ctx.save();
+		  ctx.strokeStyle = "black";
+		  ctx.fillStyle = "black";
+		  ctx.textAlign = "center";
+		  ctx.textBaseline = "middle";
+          ctx.strokeRect(0,0,130,60);
+          fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
+          
+          fillText(ctx, "Start Lobby", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
+          ctx.strokeRect(WIDTH/2 - 150, HEIGHT*2/5 - 40, 300, 80);
+          if (failedToHostRoom){
+            fillText(ctx, "THAT ROOM ALREADY EXISTS", WIDTH/2, HEIGHT*3/5 - 40, "30pt Permanent Marker", "red")
+          }
+		  ctx.restore();
+        } 
+        else if (state == MenuState.LOBBY_BY_NAME){
+          var form = document.getElementById('roomName');
+          form.style.display = 'block';
+          form.style.left = (6*WIDTH/16).toString() + "px";
+          form.style.top = (HEIGHT/4).toString() + "px";
+          ctx.save();
+		  ctx.strokeStyle = "black";
+		  ctx.fillStyle = "black";
+		  ctx.textAlign = "center";
+		  ctx.textBaseline = "middle";
+          ctx.strokeRect(0,0,130,60);
+          fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
+          
+          fillText(ctx, "Start Lobby", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
+          ctx.strokeRect(WIDTH/2 - 150, HEIGHT*2/5 - 40, 300, 80);
+          
+          if (failedToFindRoom){
+            fillText(ctx, reason, WIDTH/2, HEIGHT*3/5 - 40, "30pt Permanent Marker", "red")
+          }
+          
+		  ctx.restore();
+        } 
+        else if (state == MenuState.IN_LOBBY_HOST){
+          ctx.save();
+		  ctx.strokeStyle = "black";
+		  ctx.fillStyle = "black";
+		  ctx.textAlign = "center";
+		  ctx.textBaseline = "middle";
+          ctx.strokeRect(0,0,130,60);
+          fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
+          ctx.textAlign = "left";
+          
+          ctx.strokeRect(WIDTH/16, HEIGHT/10, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*3/10, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*5/10, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*7/10, WIDTH*7/8, HEIGHT*3/20);
+          
+          //draw host
+          drawUserInLobby({
+            username: username,
+            index: 0,
+            host: host,
+            ready: false,
+            startingClass: startingClass
+          });
+          
+          if(playersInLobby[1] != undefined){
+           drawUserInLobby(playersInLobby[1]);
+          }
+          if(playersInLobby[2] != undefined){
+            drawUserInLobby(playersInLobby[2]);
+          }
+          if(playersInLobby[3] != undefined){
+            drawUserInLobby(playersInLobby[3]);
+          }
+          
+		  ctx.restore();
+        } 
+        else if (state == MenuState.IN_LOBBY_MEMBER){
+          ctx.save();
+		  ctx.strokeStyle = "black";
+		  ctx.fillStyle = "black";
+		  ctx.textAlign = "center";
+		  ctx.textBaseline = "middle";
+          ctx.strokeRect(0,0,130,60);
+          fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
+          ctx.textAlign = "left";
+          
+          ctx.strokeRect(WIDTH/16, HEIGHT/10, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*3/10, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*5/10, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*7/10, WIDTH*7/8, HEIGHT*3/20);
+          
+          if(playersInLobby[0] != undefined){
+           drawUserInLobby(playersInLobby[0]);
+          }
+          if(playersInLobby[1] != undefined){
+           drawUserInLobby(playersInLobby[1]);
+          }
+          if(playersInLobby[2] != undefined){
+            drawUserInLobby(playersInLobby[2]);
+          }
+          if(playersInLobby[3] != undefined){
+            drawUserInLobby(playersInLobby[3]);
+          }
+		  ctx.restore();
+        }
+    };
+    
+    const drawUserInLobby = (user) =>{
+      if (user.host){
+        //UserName
+        fillText(ctx, username + " - Host", WIDTH/16 + 20, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+      } else if (user.ready){
+        //UserName
+        fillText(ctx, username + " - Ready", WIDTH/16 + 20, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+      } else {
+        fillText(ctx, username + " - Not Ready", WIDTH/16 + 20, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+      }
+
+      //Class Box 1
+      ctx.strokeRect(WIDTH*11/16, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      if(user.startingClass == 1){
+        ctx.fillStyle = "red";
+        ctx.fillRect(WIDTH*11/16, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      }
+      fillText(ctx, "S", WIDTH*91/128, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+
+      //Class Box 2
+      ctx.strokeRect(WIDTH*12/16 + 20, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      if(user.startingClass == 2){
+        ctx.fillStyle = "blue";
+        ctx.fillRect(WIDTH*12/16 + 20, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      }
+      fillText(ctx, "P", WIDTH*25/32, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+
+      //Class Box 3
+      ctx.strokeRect(WIDTH*13/16 + 40, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      if(user.startingClass == 3){
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(WIDTH*13/16 + 40, HEIGHT*((2 * user.index) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      }
+      fillText(ctx, "R", WIDTH*55/64, HEIGHT*((2 * user.index) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+    }
+    
+    const fillText = (ctx, string, x, y, css, color) => {
+		ctx.save();
+		ctx.font = css;
+		ctx.fillStyle = color;
+		ctx.fillText(string, x, y);
+		ctx.restore();
+	};
+    
+    function getMouse(e){
+	var mouse = {} // make an object
+	mouse.x = e.pageX - e.target.offsetLeft;
+	mouse.y = e.pageY - e.target.offsetTop;
+	return mouse;
+    };
+    
+   function onMouseUp(e){
+     var mouse = getMouse(e);
+
+		if(state == MenuState.MAIN_MENU){
+			if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
+			    mouse.y > this.HEIGHT/8 + 30  && mouse.y < this.HEIGHT/8 + 30 + this.HEIGHT/6){
+				
+				state = MenuState.LOBBY;
+              //GameStart();
+			} else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
+			    mouse.y > this.HEIGHT/8 + 30 + this.HEIGHT/6 + 15 && mouse.y < this.HEIGHT/8 + 30 + this.HEIGHT/6 + 15 + this.HEIGHT/6){
+				
+				state = MenuState.INSTRUCTIONS;
+				
+			} else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
+			    mouse.y > this.HEIGHT/8 + 30 + this.HEIGHT*2/6 + 30 && mouse.y < this.HEIGHT/8 + 30  + this.HEIGHT*2/6 + 30 + this.HEIGHT/6){
+				
+				state = MenuState.OPTIONS;
+				
+			} else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
+			    mouse.y > this.HEIGHT/8 + 30  + this.HEIGHT*3/6 + 45 && mouse.y < this.HEIGHT/8 + 30  + this.HEIGHT*3/6 + 45 + this.HEIGHT/6){
+				
+				state = MenuState.ABOUT
+				
+			}
+		} 
+        else if(state == MenuState.LOBBY){
+              if(mouse.y < HEIGHT*2/5 + 40 && mouse.y > HEIGHT*2/5 - 40){
+                if (mouse.x > WIDTH/4 - 150 && mouse.x < WIDTH/4 + 150){
+                  state = MenuState.LOBBY_HOST;
+                  username = document.getElementById('userName').value;
+                  host = true;
+                }
+                if (mouse.x > WIDTH/2 - 150 && mouse.x < WIDTH/2 + 150){
+                  state = MenuState.LOBBY_BY_NAME;
+                  username = document.getElementById('userName').value;
+                }
+                if (mouse.x > WIDTH*3/4 - 150 && mouse.x < WIDTH*3/4 + 150){
+                  state = MenuState.LOBBY_FINDING;
+                  username = document.getElementById('userName').value;
+                }
+              }
+        } 
+        else if (state == MenuState.LOBBY_HOST){
+          if(mouse.y < HEIGHT*2/5 + 40 && mouse.y > HEIGHT*2/5 - 40 && mouse.x > WIDTH/2 - 150 && mouse.x < WIDTH/2 + 150){
+            socket.emit('CreateRoomWithName', { name:document.getElementById('RoomName').value,
+                                               host: {
+                                                  username: username,
+                                                  index: 0,
+                                                  host: host,
+                                                  ready: false,
+                                                  startingClass: startingClass
+                                               });
+          }
+        }
+     else if (state == MenuState.LOBBY_BY_NAME){
+          if(mouse.y < HEIGHT*2/5 + 40 && mouse.y > HEIGHT*2/5 - 40 && mouse.x > WIDTH/2 - 150 && mouse.x < WIDTH/2 + 150){
+            socket.emit('FindRoomWithName', document.getElementById('RoomName').value)
+          }
+        }
+        else if (state >= 8){
+          
+        }
+          
+        if ( state != MenuState.MAIN_MENU){
+			if (mouse.x < 130 && mouse.y < 60){
+				state = MenuState.MAIN_MENU;
+			}
+		}
+		update();
+	};
+    
+    window.onload = init;
+  </script>
+	<title>Random Arena</title>
+</head>
+<body>
+	<canvas height = 800 width = 1200>
+		Get a real browser!
+	</canvas>
+  <form id ='username'>
+    Username: <input id = 'userName' type="text" name="Username" value="Mystery Man">
+  </form>
+  <form id ='roomName'>
+    Room Name: <input id = 'RoomName' type="text" name="roomName" value="Mystery Room">
+  </form>
+  
+	<!--<script src="js/loader.js"></script>
+  <script src="js/utilities.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/keys.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/items.js"></script>
+  <script src="http://code.createjs.com/preloadjs-0.4.1.min.js"></script>
+  <script src="js/emitter.js"></script>
+  <section id="audioControls">
+		<audio id="bgAudio" src="media/background.wav" controls loop></audio>
+		<audio id="effectAudio" controls></audio>
+	</section>
+  -->
+</body>
+</html>

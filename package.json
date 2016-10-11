@@ -11,7 +11,7 @@
     "pretest": "eslint ./src/ --fix",
     "test": "echo \"Tests complete\""
   },
-  "author": "Conner Westover",
+  "author": "Conner Westover and Alex Huffman",
   "license": "ISC",
   "devDependencies": {
     "eslint": "^3.4.0",
