@@ -21,6 +21,8 @@ var app = app || {};
 
 app.main = {
 	//  properties
+  socket: undefined,
+  
   WIDTH : 1200,
   HEIGHT: 800, 
 	
