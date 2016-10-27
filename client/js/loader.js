@@ -38,13 +38,3 @@ const GameStart = () =>{
 	 {id: "ground", src:"media/grass.png"}
 	]);
 };
-
-window.onblur = function(){
-	console.log("blur at " + Date());
-	app.main.pauseGame();
-};
-
-window.onfocus = function(){
-	console.log("focus at " + Date());
-	app.main.resumeGame();
-};

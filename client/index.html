@@ -36,11 +36,9 @@
 	  })(); 
   </script>
   <script type = "text/javascript">
-    
-    "use strict";
+  "use strict";
+        
     let socket;
-    
-    
     
     var room = "";
     var startingClass = 0;
@@ -56,6 +54,7 @@
     var failedToFindRoom = true;
     var reason = ""
     var playersInLobby = {};
+    var readyToPlay = false;
 
     var MenuState = {
       MAIN_MENU : 0,
@@ -67,7 +66,8 @@
       LOBBY_FINDING: 6,
       LOBBY_BY_NAME: 7,
       IN_LOBBY_HOST: 8,
-      IN_LOBBY_MEMBER: 9
+      IN_LOBBY_MEMBER: 9,
+      PLAYING: 10
     };
     
     var state = MenuState.MAIN_MENU;
@@ -139,6 +139,18 @@
       socket.on('UserUpdate', (players) =>{
         playersInLobby = players;
         update();
+      });
+      
+      socket.on('ForceLeaveRoom', (reason) =>{
+        reason = reason;
+        room = "";
+        playersInLobby = {};
+        state = MenuState.LOBBY;
+      });
+      
+      socket.on('StartPlay', (data)=>{
+        state = MenuState.PLAYING;
+        app.main.init();
       });
     };
     
@@ -302,14 +314,32 @@
             startingClass: startingClass
           }, 0);
           
+          var playersReady = true;
+          
           if(playersInLobby[1] != undefined){
            drawUserInLobby(playersInLobby[1], 1);
+            if(!playersInLobby[1].ready){
+              playersReady = false;
+            }
           }
           if(playersInLobby[2] != undefined){
             drawUserInLobby(playersInLobby[2], 2);
+            if(!playersInLobby[2].ready){
+              playersReady = false;
+            }
           }
           if(playersInLobby[3] != undefined){
-            drawUserInLobby(playersInLobby[3, 3]);
+            drawUserInLobby(playersInLobby[3], 3);
+            if(!playersInLobby[3].ready){
+              playersReady = false;
+            }
+          }
+          
+          readyToPlay = playersReady;
+          
+          if(playersReady){
+            ctx.strokeRect(WIDTH*3/4, HEIGHT*18/20, WIDTH/8, HEIGHT/20);
+            fillText(ctx, "Ready", WIDTH*3/4 + 10, HEIGHT*37/40,"30pt Permanent Marker", "black")
           }
           
 		  ctx.restore();
@@ -467,9 +497,10 @@
         }
         else if (state >= 8){
           //WIDTH*11/16, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20
-          if(mouse.x > WIDTH*11/16 && mouse.x < WIDTH*12/16){
-            if(mouse.y > HEIGHT*((2 * index) + 1)/10 + HEIGHT*1/40 && mouse.y < HEIGHT*((2 * index) + 1)/10 + HEIGHT*3/40){
+          if(mouse.y > HEIGHT*((2 * index) + 1)/10 + HEIGHT*1/40 && mouse.y < HEIGHT*((2 * index) + 1)/10 + HEIGHT*3/40){
+            if(mouse.x > WIDTH*11/16 && mouse.x < WIDTH*12/16){
               startingClass = 1;
+              ready = true;
               playersInLobby[index] = {
                 username: username,
                 index: index,
@@ -477,20 +508,80 @@
                 host: host,
                 ready: ready
               };
+              socket.emit('UpdateUsers', {
+                name: room,
+                players: playersInLobby
+              });
             }
+            if(mouse.x > WIDTH*12/16 + 20 && mouse.x < WIDTH*12/16 + 20 + WIDTH/16){
+              startingClass = 2;
+              ready = true;
+              playersInLobby[index] = {
+                username: username,
+                index: index,
+                startingClass: startingClass,
+                host: host,
+                ready: ready
+              };
+              socket.emit('UpdateUsers', {
+                name: room,
+                players: playersInLobby
+              });
+            }
+            if(mouse.x > WIDTH*13/16 + 40 && mouse.x < WIDTH*13/16 + 40 + WIDTH/16){
+              startingClass = 3;
+              ready = true;
+              playersInLobby[index] = {
+                username: username,
+                index: index,
+                startingClass: startingClass,
+                host: host,
+                ready: ready
+              };
+              socket.emit('UpdateUsers', {
+                name: room,
+                players: playersInLobby
+              });
+            }
+          }
+        }
+        if(state == MenuState.IN_LOBBY_HOST && readyToPlay){
+          //WIDTH*3/4, HEIGHT*18/20, WIDTH/8, HEIGHT/20
+          if(mouse.x > WIDTH*3/4 && mouse.x < WIDTH*7/8 && 
+             mouse.y > HEIGHT*18/20 && mouse.y < HEIGHT*19/20){
+            socket.emit('StartGame', room);
+            state = MenuState.PLAYING;
+            app.main.init();
           }
         }
           
         if ( state != MenuState.MAIN_MENU){
 			if (mouse.x < 130 && mouse.y < 60){
 				state = MenuState.MAIN_MENU;
+                if (state == MenuState.IN_LOBBY_HOST){
+                  socket.emit("KillRoomWithName", room);
+                }
+                if (state == MenuState.IN_LOBBY_MEMBER){
+                  socket.emit("LeaveRoom", {
+                    user: {
+                      username: username,
+                      index: index,
+                      startingClass: startingClass,
+                      host: host,
+                      ready: ready
+                    },
+                    name: room
+                  });
+                }
 			}
 		}
 		update();
 	};
     
     window.onload = init;
+    
   </script>
+  
 	<title>Random Arena</title>
 </head>
 <body>
@@ -503,19 +594,9 @@
   <form id ='roomName'>
     Room Name: <input id = 'RoomName' type="text" name="roomName" value="Mystery Room">
   </form>
-  
-	<!--<script src="js/loader.js"></script>
-  <script src="js/utilities.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/keys.js"></script>
-  <script src="js/sound.js"></script>
-  <script src="js/items.js"></script>
-  <script src="http://code.createjs.com/preloadjs-0.4.1.min.js"></script>
-  <script src="js/emitter.js"></script>
   <section id="audioControls">
-		<audio id="bgAudio" src="media/background.wav" controls loop></audio>
-		<audio id="effectAudio" controls></audio>
-	</section>
-  -->
+    <audio id="bgAudio" src="media/background.wav" controls loop></audio>
+    <audio id="effectAudio" controls></audio>
+  </section>
 </body>
 </html>
