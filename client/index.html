@@ -18,6 +18,7 @@
     }
   </style>
   
+  <script src="http://code.createjs.com/preloadjs-0.4.1.min.js"></script>
   <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
   <script src ="/socket.io/socket.io.js"></script>
 	
@@ -150,7 +151,7 @@
       
       socket.on('StartPlay', (data)=>{
         state = MenuState.PLAYING;
-        app.main.init();
+        GameStart();
       });
     };
     
@@ -172,11 +173,11 @@
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        fillText(ctx, "Down The Rabbit Hole", this.WIDTH/2, 50, "50pt Permanent Marker", "red");
-        fillText(ctx, "Play", this.WIDTH/2, this.HEIGHT/8 + 30+ this.HEIGHT/11, "50pt Permanent Marker", "black");
-        fillText(ctx, "Instructions", this.WIDTH/2, this.HEIGHT/6 + 30 + this.HEIGHT/4 - 10, "50pt Permanent Marker", "black");
-        fillText(ctx, "Options", this.WIDTH/2, this.HEIGHT*2/6 + 30 + this.HEIGHT/4 + 5, "50pt Permanent Marker", "black");
-        fillText(ctx, "About", this.WIDTH/2, this.HEIGHT*3/6 + 30 + this.HEIGHT/4+ 20, "50pt Permanent Marker", "black");
+        fillText(ctx, "Down The Rabbit Hole",  WIDTH/2, 50, "50pt Permanent Marker", "red");
+        fillText(ctx, "Play",  WIDTH/2,  HEIGHT/8 + 30+  HEIGHT/11, "50pt Permanent Marker", "black");
+        fillText(ctx, "Instructions",  WIDTH/2,  HEIGHT/6 + 30 +  HEIGHT/4 - 10, "50pt Permanent Marker", "black");
+        fillText(ctx, "Options",  WIDTH/2,  HEIGHT*2/6 + 30 +  HEIGHT/4 + 5, "50pt Permanent Marker", "black");
+        fillText(ctx, "About",  WIDTH/2,  HEIGHT*3/6 + 30 +  HEIGHT/4+ 20, "50pt Permanent Marker", "black");
 	  ctx.restore();
 		} 
         else if (state == MenuState.INSTRUCTIONS){
@@ -186,13 +187,13 @@
 			ctx.textAlign = "center";
 			ctx.textBaseline = "middle";
 			ctx.lineWidth = 4;
-			fillText(ctx, "Instructions", this.WIDTH/2, this.HEIGHT/8, "60pt Permanent Marker", "black");
-			fillText(ctx, "WASD to move the player", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
-			fillText(ctx, "Arrow Keys to fire bullets", this.WIDTH/2, this.HEIGHT*2/5 - 40, "30pt Permanent Marker", "black");
-			fillText(ctx, "Defeat anyone who enters the arena", this.WIDTH/2, this.HEIGHT*2/5 + 70, "30pt Permanent Marker", "black");
-			fillText(ctx, "Gain points by defeating enemies", this.WIDTH/2, this.HEIGHT*2/5 + 110, "30pt Permanent Marker", "black");
-			fillText(ctx, "Pickup weapons by walking over them", this.WIDTH/2, this.HEIGHT*2/5 + 200, "30pt Permanent Marker", "black");
-			fillText(ctx, "Fight until you drop", this.WIDTH/2, this.HEIGHT*2/5 + 240, "30pt Permanent Marker", "black");
+			fillText(ctx, "Instructions",  WIDTH/2,  HEIGHT/8, "60pt Permanent Marker", "black");
+			fillText(ctx, "WASD to move the player",  WIDTH/2,  HEIGHT*2/5, "30pt Permanent Marker", "black");
+			fillText(ctx, "Arrow Keys to fire bullets",  WIDTH/2,  HEIGHT*2/5 - 40, "30pt Permanent Marker", "black");
+			fillText(ctx, "Defeat anyone who enters the arena",  WIDTH/2,  HEIGHT*2/5 + 70, "30pt Permanent Marker", "black");
+			fillText(ctx, "Gain points by defeating enemies",  WIDTH/2,  HEIGHT*2/5 + 110, "30pt Permanent Marker", "black");
+			fillText(ctx, "Pickup weapons by walking over them",  WIDTH/2,  HEIGHT*2/5 + 200, "30pt Permanent Marker", "black");
+			fillText(ctx, "Fight until you drop",  WIDTH/2,  HEIGHT*2/5 + 240, "30pt Permanent Marker", "black");
 			
 			fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
 			ctx.strokeRect(0,0,130,60);
@@ -207,9 +208,9 @@
 			ctx.textBaseline = "middle";
 			ctx.lineWidth = 4;
 			fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
-			fillText(ctx, "Options", this.WIDTH/2, this.HEIGHT/8, "60pt Permanent Marker", "black");
-			fillText(ctx, "This section is currently", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
-			fillText(ctx, "under construction", this.WIDTH/2, this.HEIGHT*2/5+40, "30pt Permanent Marker", "black");
+			fillText(ctx, "Options",  WIDTH/2,  HEIGHT/8, "60pt Permanent Marker", "black");
+			fillText(ctx, "This section is currently",  WIDTH/2,  HEIGHT*2/5, "30pt Permanent Marker", "black");
+			fillText(ctx, "under construction",  WIDTH/2,  HEIGHT*2/5+40, "30pt Permanent Marker", "black");
 			ctx.strokeRect(0,0,130,60);
 			ctx.restore();
 		} 
@@ -221,10 +222,10 @@
 			ctx.textBaseline = "middle";
 			ctx.lineWidth = 4;
 			fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
-			fillText(ctx, "About", this.WIDTH/2, this.HEIGHT/8, "60pt Permanent Marker", "black");
-			fillText(ctx, "Down The Rabbit Hole was created by:", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
-			fillText(ctx, "Alexander Huffman", this.WIDTH/2, this.HEIGHT*2/5+40, "30pt Permanent Marker", "black");
-			fillText(ctx, "Conner Westover", this.WIDTH/2, this.HEIGHT*2/5+80, "30pt Permanent Marker", "black");
+			fillText(ctx, "About",  WIDTH/2,  HEIGHT/8, "60pt Permanent Marker", "black");
+			fillText(ctx, "Down The Rabbit Hole was created by:",  WIDTH/2,  HEIGHT*2/5, "30pt Permanent Marker", "black");
+			fillText(ctx, "Alexander Huffman",  WIDTH/2,  HEIGHT*2/5+40, "30pt Permanent Marker", "black");
+			fillText(ctx, "Conner Westover",  WIDTH/2,  HEIGHT*2/5+80, "30pt Permanent Marker", "black");
 			ctx.strokeRect(0,0,130,60);
 			ctx.restore();
 		} 
@@ -240,9 +241,9 @@
 		  ctx.textBaseline = "middle";
           ctx.strokeRect(0,0,130,60);
           fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
-          fillText(ctx, "Host A Game", this.WIDTH/4, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
-          fillText(ctx, "Find A Game", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
-          fillText(ctx, "Join A Game", 3*this.WIDTH/4, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
+          fillText(ctx, "Host A Game",  WIDTH/4,  HEIGHT*2/5, "30pt Permanent Marker", "black");
+          fillText(ctx, "Find A Game",  WIDTH/2,  HEIGHT*2/5, "30pt Permanent Marker", "black");
+          fillText(ctx, "Join A Game", 3* WIDTH/4,  HEIGHT*2/5, "30pt Permanent Marker", "black");
           ctx.strokeRect(WIDTH/4 - 150, HEIGHT*2/5 - 40, 300, 80);
           ctx.strokeRect(WIDTH/2 - 150, HEIGHT*2/5 - 40, 300, 80);
           ctx.strokeRect(WIDTH*3/4 - 150, HEIGHT*2/5 - 40, 300, 80);
@@ -261,7 +262,7 @@
           ctx.strokeRect(0,0,130,60);
           fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
           
-          fillText(ctx, "Start Lobby", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
+          fillText(ctx, "Start Lobby",  WIDTH/2,  HEIGHT*2/5, "30pt Permanent Marker", "black");
           ctx.strokeRect(WIDTH/2 - 150, HEIGHT*2/5 - 40, 300, 80);
           if (failedToHostRoom){
             fillText(ctx, "THAT ROOM ALREADY EXISTS", WIDTH/2, HEIGHT*3/5 - 40, "30pt Permanent Marker", "red")
@@ -281,7 +282,7 @@
           ctx.strokeRect(0,0,130,60);
           fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
           
-          fillText(ctx, "Start Lobby", this.WIDTH/2, this.HEIGHT*2/5, "30pt Permanent Marker", "black");
+          fillText(ctx, "Start Lobby",  WIDTH/2,  HEIGHT*2/5, "30pt Permanent Marker", "black");
           ctx.strokeRect(WIDTH/2 - 150, HEIGHT*2/5 - 40, 300, 80);
           
           if (failedToFindRoom){
@@ -430,23 +431,23 @@
      var mouse = getMouse(e);
 
 		if(state == MenuState.MAIN_MENU){
-			if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
-			    mouse.y > this.HEIGHT/8 + 30  && mouse.y < this.HEIGHT/8 + 30 + this.HEIGHT/6){
+			if (mouse.x >  WIDTH/8 && mouse.x <  WIDTH/8 +  WIDTH*3/4 &&
+			    mouse.y >  HEIGHT/8 + 30  && mouse.y <  HEIGHT/8 + 30 +  HEIGHT/6){
 				
 				state = MenuState.LOBBY;
               //GameStart();
-			} else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
-			    mouse.y > this.HEIGHT/8 + 30 + this.HEIGHT/6 + 15 && mouse.y < this.HEIGHT/8 + 30 + this.HEIGHT/6 + 15 + this.HEIGHT/6){
+			} else if (mouse.x >  WIDTH/8 && mouse.x <  WIDTH/8 +  WIDTH*3/4 &&
+			    mouse.y >  HEIGHT/8 + 30 +  HEIGHT/6 + 15 && mouse.y <  HEIGHT/8 + 30 +  HEIGHT/6 + 15 +  HEIGHT/6){
 				
 				state = MenuState.INSTRUCTIONS;
 				
-			} else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
-			    mouse.y > this.HEIGHT/8 + 30 + this.HEIGHT*2/6 + 30 && mouse.y < this.HEIGHT/8 + 30  + this.HEIGHT*2/6 + 30 + this.HEIGHT/6){
+			} else if (mouse.x >  WIDTH/8 && mouse.x <  WIDTH/8 +  WIDTH*3/4 &&
+			    mouse.y >  HEIGHT/8 + 30 +  HEIGHT*2/6 + 30 && mouse.y <  HEIGHT/8 + 30  +  HEIGHT*2/6 + 30 +  HEIGHT/6){
 				
 				state = MenuState.OPTIONS;
 				
-			} else if (mouse.x > this.WIDTH/8 && mouse.x < this.WIDTH/8 + this.WIDTH*3/4 &&
-			    mouse.y > this.HEIGHT/8 + 30  + this.HEIGHT*3/6 + 45 && mouse.y < this.HEIGHT/8 + 30  + this.HEIGHT*3/6 + 45 + this.HEIGHT/6){
+			} else if (mouse.x >  WIDTH/8 && mouse.x <  WIDTH/8 +  WIDTH*3/4 &&
+			    mouse.y >  HEIGHT/8 + 30  +  HEIGHT*3/6 + 45 && mouse.y <  HEIGHT/8 + 30  +  HEIGHT*3/6 + 45 +  HEIGHT/6){
 				
 				state = MenuState.ABOUT
 				
@@ -551,7 +552,9 @@
              mouse.y > HEIGHT*18/20 && mouse.y < HEIGHT*19/20){
             socket.emit('StartGame', room);
             state = MenuState.PLAYING;
-            app.main.init();
+            console.log(app);
+            console.log(app.main);
+            GameStart();
           }
         }
           
@@ -578,10 +581,1783 @@
 		update();
 	};
     
-    window.onload = init;
-    
+    window.onload = init; 
   </script>
   
+  <script>//main script
+  // main.js
+  // Dependencies: 
+  // Description: singleton object
+  // This object will be our main "controller" class and will contain references
+  // to most of the other objects in the game.
+  // Credit Enemy Sprite Sheet to https://andrewphillippi.files.wordpress.com/2013/01/zombiesheet.png
+  // another source of same spritesheet https://andrewphillippi.wordpress.com/2013/01/18/project-idea/
+  // Credit Player Sprite Sheet to http://knightyamato.deviantart.com/art/Blank-Sprite-Sheet-4-2-129192797 
+  // another source of above sprite sheet http://orig12.deviantart.net/9b3c/f/2009/193/f/2/blank_sprite_sheet_4_2_by_knightyamato.png
+
+  // 'HOST ONLY' to find functions that are specific to the host
+  // 'EVERYONE' to find functions that are non specific
+  // 'SERVER HERE' to find where server sends and recieves need to go
+  // 'TODO' to find things that need to be done
+
+  "use strict";
+
+  // if app exists use the existing copy
+  // else create a new object literal
+  var app = app || {};
+
+  app.main = {
+      //  properties
+    WIDTH : 1200,
+    HEIGHT: 800, 
+
+    canvas: undefined, 
+    ctx: undefined,
+
+    lastTime: 0, // used by calculateDeltaTime() 
+    debug: true,
+    paused: false, 
+    animationID: 0,
+    sound: undefined,
+
+    gameState: undefined,
+    roundScore: 0,
+    totalScore: 0,
+      enemies: [],
+      numEnemies: 0,
+      staggerTime: 0, // delay between spawning
+      endRound: 0, 
+      timeBetweenWaves: 5000,
+
+      bulletSize: 5,
+      ENEMY_RADIUS: 18,
+
+      itemText: "",
+      descriptionText: "",
+      timePutOnScreen: 0,
+
+      itemsOnGround: [],
+      invert: false,
+
+      eBullActive: false,
+      eBullLethal: false,
+
+      playerOnFire: false,
+
+      amHost: false,
+      numPlayers: 0,
+      players: [],
+      playersDead: 0,
+
+
+      PLAYER: {
+          health: 10,
+          attackPower: 5,
+          defense: 1,
+          x: 420,
+          y: 420,
+          radius: 0,
+          maxBullets: 50000,
+          BULLET:{
+              distance: 600,
+              power: 1,
+              x: 0,
+              y: 0,
+              radius: 2,
+              speed: 0,
+              live: false
+          },
+      },
+
+      ENEMY: {
+          health: 2,
+          attackPower: 1,
+          defense: 1,
+          x: 0,
+          y: 0,
+          radius: 10
+      },
+
+      // Part I - #2
+      GAME_STATE: { // another fake enumeration
+          //Play States
+          BEGIN : 0,
+          DEFAULT : 1,
+          ROUND_OVER : 2,
+          REPEAT_LEVEL : 3,
+      },	
+
+      //  Part II - #2,3,4
+      doMousedown: function(e){
+          var mouse = getMouse(e);
+      },
+
+      // methods
+      init : () => {
+          console.log("app.main.init() called");
+          // initialize properties
+          //app.main.sound.playBGAudio();
+          app.main.canvas = document.querySelector('canvas');
+          app.main.canvas.width = app.main.WIDTH;
+          app.main.canvas.height = app.main.HEIGHT;
+          app.main.ctx = app.main.canvas.getContext('2d');
+          app.main.totalScore = 0;
+          app.main.gameState = 1;
+          //app.main.canvas.onmousedown = app.main.doMousedown.bind(this);
+          
+          console.log(this);
+          // - SERVER HERE -
+          // - NEED NUMBER OF PLAYERS -
+          if (app.main.amHost == true){
+              for(var i = 0; i < numPlayers; i++){
+                  app.main.players.add(app.main.makePlayer());
+              }
+          }
+
+          if(app.main.amHost == true){
+              app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
+          }
+
+          if(app.main.amHost == true){
+              app.main.reset();
+          }
+
+          app.main.update();
+      },
+
+      // - HOST ONLY -
+      reset: function(){
+          app.main.roundScore = 0;
+          app.main.numEnemies += 5;
+          app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
+          // - SERVER HERE -
+          // - SEND RESET TO PARTY IF HOST
+      },
+
+      // - EVERYONE -
+      update: () => {
+          console.log("Update Called");
+          //app.main.animationID = requestAnimationFrame(app.main.update.bind(this));
+
+          app.main.ctx.clearRect(0,0,app.main.WIDTH, app.main.HEIGHT);
+
+          // 2) PAUSED?
+          // if so, bail out of loop
+
+          // 3) HOW MUCH TIME HAS GONE BY?
+          var dt = app.main.calculateDeltaTime();
+
+          // i) draw background	
+          if (app.main.gameState == app.main.GAME_STATE.DEFAULT){
+              app.main.drawBackground(app.main.ctx);
+          }
+
+          //app.main.drawMain(app.main.ctx);
+
+          //GamePlay Drawing Happens
+          if (app.main.gameState == app.main.GAME_STATE.DEFAULT || app.main.gameState == app.main.GAME_STATE.ROUND_OVER){
+              if(app.main.amHost == true){
+                  app.main.moveEnemy(dt);
+                  app.main.checkForCollisions();
+              }
+
+              //powers check
+              if(app.main.eBullActive == true){
+                  app.main.enemyShoot();
+              }
+              //update everyone
+              if(myKeys.keydown[myKeys.KEYBOARD.KEY_W]){
+                  app.main.PLAYER.moveY(-dt);
+              }	
+              if (myKeys.keydown[myKeys.KEYBOARD.KEY_S]){
+                  app.main.PLAYER.moveY(dt);
+              } 
+              if (myKeys.keydown[myKeys.KEYBOARD.KEY_A]){
+                  app.main.PLAYER.moveX(-dt);
+              } 
+              if (myKeys.keydown[myKeys.KEYBOARD.KEY_D]){
+                  app.main.PLAYER.moveX(dt);
+              } 
+              if(myKeys.keydown[myKeys.KEYBOARD.KEY_UP]){
+                  app.main.PLAYER.fireUp();
+              }	
+              if (myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN]){
+                  app.main.PLAYER.fireDown();
+              } 
+              if (myKeys.keydown[myKeys.KEYBOARD.KEY_LEFT]){
+                  app.main.PLAYER.fireLeft();
+              } 
+              if (myKeys.keydown[myKeys.KEYBOARD.KEY_RIGHT]){
+                  app.main.PLAYER.fireRight();
+              } 
+              // - SERVER HERE -
+              // - UPDATE OTHER PLAYER POSITIONS/STATUS IF HOST -
+              // - SEND ENEMY POSITIONS IF HOST -
+              // - SEND PLAYER POSITION/STATUS IF PARTY -
+              app.main.PLAYER.update(dt);
+
+              if(app.main.gameState != app.main.GAME_STATE.ROUND_OVER){
+                  app.main.drawOnGroundItems(app.main.ctx);
+              }
+              //draw things
+              if (app.main.gameState == app.main.GAME_STATE.DEFAULT){
+                  app.main.drawShadows(app.main.ctx);
+                  app.main.drawEnemy(app.main.ctx);
+              }
+              app.main.PLAYER.draw(app.main.ctx);
+              //draw hud
+              app.main.drawItemText(app.main.ctx);
+              app.main.drawHUD(app.main.ctx);
+
+              // - HOST ONLY -
+              if(app.main.amHost == true){
+                  app.main.checkTemporary();
+                  app.main.checkEnemiesDead();
+              }
+          }
+
+          if(app.main.gameState == app.main.GAME_STATE.ROUND_OVER){
+              app.main.drawHUD(app.main.ctx);
+              if(myKeys.keydown[myKeys.KEYBOARD.KEY_SPACE]){
+                  if (app.main.PLAYER.health <= 0){
+                    //TODO: End Game Score kick to lobby
+                    //app.main.gameState = app.main.GAME_STATE.MAIN_MENU;
+                  } else {
+                      app.main.gameState = app.main.GAME_STATE.DEFAULT;
+                      if(app.main.amHost == true){
+                          app.main.reset();
+                      }
+                  }
+              }
+          }
+      },
+
+      // - EVERYONE -
+      drawBackground: function(ctx){
+          ctx.fillStyle = "white"; 
+          ctx.strokeStyle = "black";
+          ctx.fillRect(0,0,app.main.WIDTH,app.main.HEIGHT); 
+          var image = new Image();
+          image.src = app.IMAGES['ground'];
+          ctx.drawImage(image,					 					
+                      0, 0, app.main.WIDTH, app.main.HEIGHT
+                      );
+      },
+
+      // - EVERYONE -
+      drawHUD: function(ctx){
+
+          // - SERVER HERE -
+          // - SEND SCORE IF HOST -
+
+          ctx.save();
+          // draw score
+          // fillText(app.main.ctx,string, x, y, css, color)
+          ctx.fillStyle = "white";
+          ctx.fillRect(app.main.WIDTH - 210, 2.5, 170, 22.5);
+          app.main.fillText(app.main.ctx,"Total Score: " + app.main.totalScore, app.main.WIDTH - 200, 20, "14pt Permanent Marker", "black");
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = "black";
+          ctx.fillRect(5,5, 200, 40);
+          ctx.fillStyle = "red";
+          ctx.fillRect(5,5,200 * (app.main.PLAYER.health/app.main.PLAYER.maxHealth),40);
+          ctx.strokeRect(5,5, 200, 40);
+
+
+          ctx.fillStyle = "white";
+          if(app.main.gameState == app.main.GAME_STATE.BEGIN){
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              app.main.fillText(app.main.ctx,"To begin, click the screen", app.main.WIDTH/2, app.main.HEIGHT/2, "30pt Permanent Marker", "white");
+          } // end if
+
+          if(app.main.gameState == app.main.GAME_STATE.ROUND_OVER){
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              if (app.main.PLAYER.health <= 0){
+                  app.main.fillText(app.main.ctx,"GAME OVER", app.main.WIDTH/2, app.main.HEIGHT/2 - 80, "50pt Permanent Marker", "red");
+                  app.main.fillText(app.main.ctx,"Your final score was: " + app.main.roundScore, app.main.WIDTH/2, app.main.HEIGHT/2 - 20, "30pt Permanent Marker", "black");
+                  app.main.fillText(app.main.ctx,"Press SPACE to return to Main Menu", app.main.WIDTH/2, app.main.HEIGHT/2 + 10, "30pt Permanent Marker", "black");
+              } else {
+                  app.main.fillText(app.main.ctx,"You have completed this round", app.main.WIDTH/2, app.main.HEIGHT/2 - 40, "30pt Permanent Marker", "black");
+                  app.main.fillText(app.main.ctx,"Press SPACE to continue", app.main.WIDTH/2, app.main.HEIGHT/2, "30pt Permanent Marker", "black");
+              }
+          } // end if
+
+          ctx.restore(); // NEW
+      },
+
+      // - HOST ONLY -
+      makePlayer: function(){
+          var makeBullet = function(x,y,xSpeed, ySpeed, maxDistance){
+              var move = function(dt){
+                  app.main.x += app.main.xSpeed;
+                  app.main.y += app.main.ySpeed;
+                  app.main.traveled += Math.abs(app.main.ySpeed);
+                  app.main.traveled += Math.abs(app.main.xSpeed);
+
+                  if (app.main.maxDistance < app.main.traveled){
+                      app.main.live = false;
+                  }
+              };
+
+              var draw = function(ctx){
+                  ctx.save();
+                  ctx.fillStyle = "red";
+                  ctx.strokeStyle = "black";
+                  ctx.beginPath();
+                  ctx.arc(app.main.x, app.main.y, app.main.radius, 0, Math.PI*2, false);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.restore();
+              };
+
+              var drawShadow = function(ctx){
+                  ctx.save();
+                  ctx.fillStyle = "black";
+                  ctx.beginPath();
+                  ctx.globalAlpha = 0.5;
+                  ctx.arc(app.main.x, app.main.y + 20 - (20 * (app.main.traveled/app.main.maxDistance)), app.main.radius *.9, 0, Math.PI*2, false);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.restore();
+              }
+
+              var b = {};
+              b.maxDistance = maxDistance;
+              b.traveled = 0;
+              b.power = 1;
+              b.x = app.main.x;
+              b.y = app.main.y;
+              b.radius = app.main.bulletSize;
+              b.xSpeed = xSpeed;
+              b.ySpeed = ySpeed;
+              b.live = true
+              b.draw = draw;
+              b.drawShadow = drawShadow;
+              b.move = move;
+
+              return b;
+          };
+
+          var fireU = function(){
+              var d = new Date();
+              app.main.direction = 0;
+              if (app.main.bullets.length < p.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
+                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,0,-5,app.main.maxDistance));
+                  app.main.timeLastFired = d.getTime();
+              }
+          };
+          var fireD = function(){
+              var d = new Date();
+              app.main.direction = 1;
+              if (app.main.bullets.length < p.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
+                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,0,5,app.main.maxDistance));
+                  app.main.timeLastFired = d.getTime();
+              }
+          };
+          var fireL = function(){
+              var d = new Date();
+              app.main.direction = 3;
+              if (app.main.bullets.length < p.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
+                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,-5,0,app.main.maxDistance));
+                  app.main.timeLastFired = d.getTime();
+              }
+          };
+          var fireR = function(){
+              var d = new Date();
+              app.main.direction = 2;
+              if (app.main.bullets.length < p.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
+                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,5,0,app.main.maxDistance));
+                  app.main.timeLastFired = d.getTime();
+              }
+          };
+          var drawPlayer = function(ctx){
+              ctx.save();
+
+              if(!app.main.image){
+                  ctx.fillStyle = "orange";
+                  ctx.fillRect(app.main.x, app.main.y, 32, 32);
+              } else {
+                  var halfW = app.main.radius;
+                  var halfH = app.main.radius;
+                  if(app.main.direction == 2){
+                      ctx.drawImage(app.main.image,				
+                      0 + app.main.spriteNumber * 32,64,32,32,		 					
+                      app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
+                      );
+                  } else if (app.main.direction == 3) {
+                      ctx.drawImage(app.main.image,				
+                      0 + app.main.spriteNumber * 32,32,32,32,		 					
+                      app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
+                      );
+                  } else if(app.main.direction == 1){
+                      ctx.drawImage(app.main.image,				
+                      0 + app.main.spriteNumber * 32,1,32,31,		 					
+                      app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
+                      );	
+                  } else {
+                      ctx.drawImage(app.main.image,					 					
+                      0 + app.main.spriteNumber * 32,96,32,32,		 					
+                      app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
+                      );
+                  }
+              }
+              ctx.restore();
+
+              for (var i = 0; i < app.main.bullets.length; i++){
+                  app.main.bullets[i].draw(ctx);
+              }
+          };
+
+          var drawShadow = function(ctx){
+              ctx.save();
+              ctx.fillStyle = "black";
+              ctx.strokeStyle = "black";
+              ctx.globalAlpha = .7;
+              ctx.beginPath();
+              ctx.arc(app.main.x, app.main.y+ 12, app.main.radius*.9, 0, Math.PI*2, false);
+              ctx.fill();
+              ctx.closePath();
+              ctx.stroke();
+              ctx.restore();
+              for (var i = 0; i < app.main.bullets.length; i++){
+                  app.main.bullets[i].drawShadow(ctx);
+              }
+          }
+
+          var movePlayerX = function(dt){
+              app.main.x += app.main.speed * dt;
+          };
+
+          var movePlayerY = function(dt){
+              app.main.y += app.main.speed * dt;
+          };
+
+          var update = function(dt){
+              for (var i = 0; i < app.main.bullets.length; i++){
+                  app.main.bullets[i].move(dt);
+                  if(app.main.bullets[i].live == false) app.main.bullets.splice(i, 1);
+              }
+              if (app.main.x - app.main.radius < 0) app.main.x = app.main.radius;
+              if (app.main.x + app.main.radius > app.main.WIDTH) app.main.x = app.main.WIDTH - app.main.radius;
+              if (app.main.y - app.main.radius < 0) app.main.y = app.main.radius;
+              if (app.main.y + app.main.radius > app.main.HEIGHT) app.main.y = app.main.HEIGHT - app.main.radius;
+
+              if (app.main.gotHit){
+                  var d = new Date();
+                  if (d.getTime() - app.main.timeGotHit > 1000){
+                      app.main.gotHit = false;
+                  }
+              }
+
+              var d = new Date();
+              if (d.getTime() - app.main.timeLastSpriteChanged > 250){
+                  app.main.timeLastSpriteChanged = d.getTime();
+                  app.main.spriteNumber++;
+                  if (app.main.spriteNumber > 2){
+                      app.main.spriteNumber = 0;
+                  }
+              }
+          }
+
+          var p = {};
+          p.draw = drawPlayer;
+          p.speed = 150;
+          p.x = app.main.WIDTH/2;
+          p.y = app.main.HEIGHT/2;
+          p.moveX = movePlayerX;
+          p.moveY = movePlayerY;
+          p.health = 10;
+          p.maxHealth = 10; // only used for drawing purposes
+          p.attackPower = 1;
+          p.defense = 1;
+          p.radius = 18;
+          p.maxBullets = 10;
+          p.bullets = [];
+          p.makeBullet = makeBullet;
+          p.fireUp = fireU;
+          p.fireDown = fireD;
+          p.fireLeft = fireL;
+          p.fireRight = fireR;
+          p.update = update;
+          p.drawShadow = drawShadow;
+          p.gotHit = false;
+          p.timeGotHit = 0;
+          p.timeLastFired = 0;
+          p.fireRate = 500;
+          p.maxDistance = 600;
+
+          //Sprite resources
+          p.timeLastSpriteChanged = 0;
+          p.spriteNumber = 0;
+          p.direction = 0; // 0 = up, 1 = down, 2 = right, 3 = left
+
+          var image = new Image();
+          image.src = app.IMAGES['playerImage'];
+
+          p.image = image;
+
+          return p;
+      },
+
+      // - HOST ONLY -
+      makeEnemy: function(num){
+
+          var makeBullet = function(x,y,xSpeed, ySpeed){
+              var move = function(dt){
+                  app.main.x += app.main.xSpeed;
+                  app.main.y += app.main.ySpeed;
+                  app.main.traveled += Math.abs(app.main.ySpeed);
+                  app.main.traveled += Math.abs(app.main.xSpeed);
+
+                  if (app.main.maxDistance < app.main.traveled){
+                      app.main.live = false;
+                  }
+              };
+
+              var draw = function(ctx){
+                  ctx.save();
+                  ctx.fillStyle = app.main.fillStyle;
+                  ctx.strokeStyle = "black";
+                  ctx.beginPath();
+                  ctx.arc(app.main.x, app.main.y, app.main.radius, 0, Math.PI*2, false);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.restore();
+              };
+
+              var drawShadow = function(ctx){
+                  ctx.save();
+                  ctx.fillStyle = "black";
+                  ctx.beginPath();
+                  ctx.globalAlpha = 0.5;
+                  ctx.arc(app.main.x, app.main.y + 20 - (20 * (app.main.traveled/app.main.maxDistance)), app.main.radius *.9, 0, Math.PI*2, false);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.restore();
+              }
+
+              var b = {};
+              if(app.main.eBullLethal == true){
+                  b.fillStyle = "red";
+              }else{
+                  b.fillStyle = "yellow";
+              }
+
+              b.maxDistance = 300;
+              b.traveled = 0;
+              b.power = 1;
+              b.x = app.main.x;
+              b.y = app.main.y;
+              b.radius = 5;
+              b.xSpeed = xSpeed;
+              b.ySpeed = ySpeed;
+              b.live = true
+              b.draw = draw;
+              b.drawShadow = drawShadow;
+              b.move = move;
+
+              return b;
+          };
+
+          var fireU = function(){
+              var d = new Date();
+              app.main.direction = 0;
+              if (app.main.bullets.length < e.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
+                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,0,-5));
+                  app.main.timeLastFired = d.getTime();
+              }
+          };
+          var fireD = function(){
+              var d = new Date();
+              app.main.direction = 1;
+              if (app.main.bullets.length < e.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
+                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,0,5));
+                  app.main.timeLastFired = d.getTime();
+              }
+          };
+          var fireL = function(){
+              var d = new Date();
+              app.main.direction = 3;
+              if (app.main.bullets.length < e.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
+                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,-5,0));
+                  app.main.timeLastFired = d.getTime();
+              }
+          };
+          var fireR = function(){
+              var d = new Date();
+              app.main.direction = 2;
+              if (app.main.bullets.length < e.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
+                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,5,0));
+                  app.main.timeLastFired = d.getTime();
+              }
+          };
+
+          var enemyDraw = function(ctx){
+              ctx.save();
+              if(!app.main.image){
+                  ctx.fillStyle = "orange";
+                  ctx.fillRect(app.main.x, app.main.y, 32, 32);
+              } else {
+                  var halfW = app.main.radius;
+                  var halfH = app.main.radius;
+                  if( Math.abs(app.main.xSpeed) >= Math.abs(app.main.ySpeed)){
+                      if(app.main.xSpeed >= 0){
+                          app.main.fireDirection = 2;
+                          ctx.drawImage(app.main.image,				
+                          1 + app.main.spriteNumber * 32 + app.main.column * 96,65 + app.main.row * 128,31,31,		 					
+                          app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
+                          );
+                      } else {
+                          app.main.fireDirection = 3;
+                          ctx.drawImage(app.main.image,				
+                          1 + app.main.spriteNumber * 32 + app.main.column * 96,33 + app.main.row * 128,31,31,		 					
+                          app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
+                          );
+                      }
+                  } else {
+                      if(app.main.ySpeed >= 0){
+                          app.main.fireDirection = 1;
+                          ctx.drawImage(app.main.image,				
+                          1 + app.main.spriteNumber * 32 + app.main.column * 96,1 + app.main.row * 128,31,31,		 					
+                          app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
+                          );	
+                      } else {
+                          app.main.fireDirection = 0;
+                          ctx.drawImage(app.main.image,					 					
+                          1 + app.main.spriteNumber * 32 + app.main.column * 96,97 + app.main.row * 128,31,31,		 					
+                          app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
+                          );
+                      }
+                  }
+              }
+
+              ctx.restore();
+              for (var i = 0; i < app.main.bullets.length; i++){
+                  app.main.bullets[i].draw(ctx);
+              }
+          };
+
+          var enemyDrawShadow = function(ctx){
+              ctx.save();
+              ctx.fillStyle = "black";
+              ctx.beginPath();
+              ctx.globalAlpha = .7;
+              ctx.arc(app.main.x, app.main.y + 12, app.main.radius*.9, 0, Math.PI*2, false);
+              ctx.fill();
+              ctx.closePath();
+              ctx.restore();
+              for (var i = 0; i < app.main.bullets.length; i++){
+                  app.main.bullets[i].drawShadow(ctx);
+              }
+          };
+
+          var enemyMove = function(dt){
+              for (var i = 0; i < app.main.bullets.length; i++){
+                  app.main.bullets[i].move(dt);
+                  if(app.main.bullets[i].live == false) app.main.bullets.splice(i, 1);
+              }
+
+              app.main.xSpeed = app.main.PLAYER.x - app.main.x;
+              app.main.ySpeed = app.main.PLAYER.y - app.main.y;
+
+              var mag = Math.sqrt(app.main.xSpeed*app.main.xSpeed + app.main.ySpeed*app.main.ySpeed);
+              app.main.xSpeed /= mag;
+              app.main.ySpeed /= mag;
+
+              app.main.x += app.main.xSpeed * app.main.speed * dt;
+              app.main.y += app.main.ySpeed * app.main.speed * dt;
+
+              //update walk cycle
+              var d = new Date();
+              if (d.getTime() - app.main.timeLastSpriteChanged > 10000/app.main.speed){
+                  app.main.timeLastSpriteChanged = d.getTime();
+                  app.main.spriteNumber++;
+                  if (app.main.spriteNumber > 2){
+                      app.main.spriteNumber = 0;
+                  }
+              }
+          }
+
+          var array = [];
+
+          var d = new Date();
+          var n = d.getTime();
+
+          for(var i = 0; i < num; i++){
+              var e = {};
+              var door = Math.floor(getRandom(0, 3));
+              //control spawn point
+              if(door == 0){
+                  e.x = 30;
+                  e.y = app.main.HEIGHT/2;
+              }
+              else if(door == 1){
+                  e.x = app.main.WIDTH/2;
+                  e.y = 30;
+              }
+              else{
+                  e.x = app.main.WIDTH - 30;
+                  e.y = app.main.HEIGHT/2;
+              }
+
+              e.startTime = n;
+
+              e.started = false;
+              e.alive = true;
+
+              //calculate direction to player
+              e.xSpeed = app.main.PLAYER.x - e.x;
+              e.ySpeed = app.main.PLAYER.y - e.y;
+              //normalize
+              var mag = Math.sqrt(e.xSpeed*e.xSpeed + e.ySpeed*e.ySpeed);
+              e.xSpeed /= mag;
+              e.ySpeed /= mag;
+
+              e.speed = Math.floor(getRandom(50, 150));
+
+              e.health = Math.floor(getRandom(1, 5));
+              e.attackPower = Math.floor(getRandom(1, 3));;
+              e.radius = app.main.ENEMY_RADIUS;
+
+              e.draw = enemyDraw;
+              e.drawShadow = enemyDrawShadow;
+              e.move = enemyMove;
+
+              e.maxBullets = 1;
+              e.bullets = [];
+              e.makeBullet = makeBullet;
+              e.fireUp = fireU;
+              e.fireDown = fireD;
+              e.fireLeft = fireL;
+              e.fireRight = fireR;
+              e.timeLastFired = 0;
+              e.fireRate = 2000;
+              e.fireDirection = 0;
+
+              e.timeLastSpriteChanged = 0;
+              e.spriteNumber = 0;
+
+
+              //IMAGES
+              var image = new Image();
+              var r = getRandom(0,1);
+              if (r <= .25){
+                  image.src = app.IMAGES['wolf'];
+                  e.row = 0;
+                  e.column = 0;
+              } else if (r > .25 & r <= .5){
+                  image.src = app.IMAGES['deer'];
+                  e.row = 0;
+                  e.column = 0;
+              } else if (r > .5 && r <= .75){
+                  image.src = app.IMAGES['bunny'];
+                  e.row = 0;
+                  e.column = 0;
+              } else {
+                  image.src = app.IMAGES['bear'];
+                  e.row = 0;
+                  e.column = 0;
+              }
+
+              e.image = image;
+
+              //Object.seal(e);
+              array.push(e);
+          }
+          return array;
+      },
+
+      // - EVERYONE -
+      // - TODO -
+      // - Player needs to draw their own shadows
+      drawShadows: function(ctx){
+          for(var p = 0; p < app.main.players.length; p++){
+              players[p].drawShadow(ctx);
+          }
+          for(var i = 0; i < app.main.enemies.length; i++){
+              var e = app.main.enemies[i];
+              if(e.started == true && e.alive == true){
+                  e.drawShadow(ctx);
+              }
+          }
+      },
+
+      // - EVERYONE -
+      drawEnemy: function(ctx){
+          for(var i = 0; i < app.main.enemies.length; i++){
+              var e = app.main.enemies[i];
+
+              var d = new Date();
+              var n = d.getTime();
+
+              if(app.main.amHost == true){
+                  if((e.startTime + i*getRandom(500,1000)) <= n){
+                      e.started = true;
+                  }
+              }
+
+              if(e.started == true && e.alive == true){
+                  e.draw(ctx);
+              }
+          }
+      },
+
+      // - HOST ONLY -
+      moveEnemy: function(dt){
+          for(var i = 0; i < app.main.enemies.length; i++){
+              var e = app.main.enemies[i];
+              if(e.started == true){
+                  e.move(dt);
+              }
+          }
+      },
+
+      // - HOST ONLY -
+      enemyShoot: function(){
+          for(var i = 0; i < app.main.enemies.length; i++){
+          var e = app.main.enemies[i];
+              if(e.fireDirection == 0){
+                  e.fireUp();
+              }else if(e.fireDirection == 1){
+                  e.fireDown();
+              }else if(e.fireDirection == 2){
+                  e.fireRight();
+              }else{
+                  e.fireLeft();
+              }
+          }
+      },
+
+      // - EVERYONE -
+      fillText: function(ctx, string, x, y, css, color) {
+          ctx.save();
+          // https://developer.mozilla.org/en-US/docs/Web/CSS/font
+          ctx.font = css;
+          ctx.fillStyle = color;
+          ctx.fillText(string, x, y);
+          ctx.restore();
+      },
+
+      // - HOST ONLY -
+      calculateDeltaTime: function(){
+          // what's with (+ new Date) below?
+          // + calls Date.valueOf(), which converts it from an object to a 	
+          // primitive (number of milliseconds since January 1, 1970 local time)
+          var now,fps;
+          now = (+new Date); 
+          fps = 1000 / (now - app.main.lastTime);
+          fps = clamp(fps, 12, 60);
+          app.main.lastTime = now; 
+          return 1/fps;
+      },
+
+      // - HOST ONLY -
+      //check collision 
+      checkForCollisions: function(){
+          // - SERVER HERE -
+          // - SEND GAME STATE CHANGE IF ROUND OVER TO PARTY -
+
+          for (var p = 0; p < app.main.players.length; p++){
+              for (var j = 0; j < app.main.enemies.length; j++){
+                  if (app.main.enemies[j].alive == false) continue; // if enemy isn't alive disregard
+                  if (app.main.enemies[j].started == false) continue; // if enemy isn't started disregard
+                  if (!app.main.player[p].gotHit && 
+                      Math.abs(app.main.player[p].x - app.main.enemies[j].x) < app.main.player[p].radius + app.main.enemies[j].radius &&
+                      Math.abs(app.main.player[p].y - app.main.enemies[j].y) < app.main.player[p].radius + app.main.enemies[j].radius){
+                          app.main.player[p].health -= app.main.enemies[j].attackPower; //decrement health
+                              if (app.main.enemies[j].health <= 0){
+                                  app.main.enemies[j].alive = false;
+                              }
+                          }
+                          //app.main.sound.playPlayerHurtEffect();
+                          if(app.main.player[p].health <= 0){ //make sure health can't go negative and sets round to over
+                              app.main.player[p].health = 0;
+                              playersDead ++;
+                              if(playersDead == app.main.players.length){
+                                  app.main.roundScore = app.main.totalScore;
+                                  app.main.gameState = app.main.GAME_STATE.ROUND_OVER;
+                              }
+                          }
+                          var d = new Date();
+                          app.main.player[p].timeGotHit = d.getTime();
+                          app.main.player[p].gotHit = true;
+                      }
+                  if(app.main.eBullActive == true){
+                      for(var i = 0; i < app.main.enemies[j].bullets.length; i++){
+                          var b = app.main.enemies[j].bullets[i];
+                          if (Math.abs(b.x - app.main.player[p].x) < b.radius + app.main.player[p].radius && Math.abs(b.y - app.main.player[p].y) < b.radius + app.main.player[p].radius){
+                              b.live = false;
+                              if(app.main.eBullLethal == true){
+                                  app.main.player[p].health -= 1;
+                                  if(app.main.player[p].health <= 0){ //make sure health can't go negative and sets round to over
+                                      app.main.player[p].health = 0;
+                                      playersDead ++;
+                                      if(playersDead == app.main.players.length){
+                                          app.main.roundScore = app.main.totalScore;
+                                          app.main.gameState = app.main.GAME_STATE.ROUND_OVER;
+                                      }
+                                  }
+                                  var d = new Date();
+                                  app.main.player[p].timeGotHit = d.getTime();
+                                  app.main.player[p].gotHit = true;
+                              }
+                          }
+                      }
+                  }
+                  for (var i = 0; i < app.main.PLAYER.bullets.length; i++){
+                      var e = app.main.enemies[j];
+                      var b = app.main.player[p].bullets[i];
+                      if (Math.abs(b.x - e.x) < b.radius + e.radius && Math.abs(b.y - e.y) < b.radius + e.radius){
+                          e.health -= b.power;
+                          //app.main.sound.playEnemyHurtEffect();
+                          b.live = false;
+                          if(e.health <= 0){
+                              e.alive = false;
+                              app.main.totalScore = app.main.totalScore + 1;
+                              if(getRandom(0,100) > 40){
+                                  var x = Math.floor(getRandom(0, myTemporaryItems.length));
+                                  app.main.makeActiveItem(x, e.x,e.y);								
+                              }
+                          }
+                      }
+                  }
+
+                  //ITEMS
+                  for (var i = 0; i < app.main.itemsOnGround.length; i++){
+                      if (Math.abs(app.main.player[p].x - app.main.itemsOnGround[i].x) < app.main.player[p].radius + app.main.itemsOnGround[i].radius &&
+                          Math.abs(app.main.player[p].y - app.main.itemsOnGround[i].y) < app.main.player[p].radius + app.main.itemsOnGround[i].radius){
+                          if(app.main.itemsOnGround[i].active != true && app.main.itemsOnGround[i].onGround == true){
+                              app.main.itemsOnGround[i].onGround = false;
+                              app.main.itemsOnGround[i].doEffect(app.main.PLAYER);
+
+                              app.main.itemText = app.main.itemsOnGround[i].name;
+                              app.main.descriptionText = app.main.itemsOnGround[i].description;
+                              var d = new Date();
+                              app.main.timePutOnScreen = d.getTime();
+                          } else {
+                              app.main.itemsOnGround.splice(i, 1);
+                          }
+                      }
+                  }
+              }
+          },
+
+      // - HOST ONLY - 
+      makeActiveItem: function(index, x, y){
+          var item = myTemporaryItems[index];
+          item.onGround = true;
+          item.y = y;
+          item.x = x;
+          var image = new Image();
+          var r = getRandom(0,100);
+          if (r > 0 && r <=25){
+              image.src = app.IMAGES['pill'];
+          } else if (r > 25 && r <= 50){
+              image.src = app.IMAGES['mushroom'];
+          } else if (r > 50 && r <= 75){
+              image.src = app.IMAGES['flower1'];
+          } else if (r > 75 && r <= 100){
+              image.src = app.IMAGES['plant'];
+          } else {
+              image.src = app.IMAGES['flower2'];
+          }
+          item.image = image;
+          app.main.itemsOnGround.push(item);
+      },
+
+      // - EVERYONE -
+      drawOnGroundItems: function(ctx){
+          for (var i = 0; i < app.main.itemsOnGround.length; i++){
+              var item = app.main.itemsOnGround[i];
+              if(item.onGround == true){
+                  ctx.save();
+                  ctx.drawImage(item.image,		 					
+                      item.x - item.radius/2, item.y - item.radius/2, item.radius, item.radius);	
+                  ctx.restore();
+              }
+          }
+
+      },
+
+      // - HOST ONLY -
+      checkTemporary: function(){
+          for(var i = 0; i < myTemporaryItems.length; i++){
+              if(myTemporaryItems[i].beingUsed != true) continue;
+              var n = timerCall();
+              if((n - myTemporaryItems[i].timeActive) > 15000){
+                  myTemporaryItems[i].doEffect(app.main.PLAYER);
+              }
+          }
+      },
+
+      // - HOST ONLY -
+      //check if all enemies have been killed
+      checkEnemiesDead: function(){
+          var dead = 0;
+          for (var j = 0; j < app.main.enemies.length; j++){
+              if(app.main.enemies[j].alive == false) dead++;
+          }
+          if(dead >= app.main.numEnemies){
+              app.main.gameState = app.main.GAME_STATE.ROUND_OVER;
+          }
+      },
+
+      stopBGAudio: function(){
+          //app.main.bgAudio.pause();
+          //app.main.bgAudio.currentTime = 0;
+          //app.main.sound.stopBGAudio();
+      },
+
+      // - EVERYONE -
+      drawItemText: function(ctx){
+          var d = new Date();
+          if (d.getTime() - app.main.timePutOnScreen < 2500){
+              ctx.save();
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillStyle = "rgba(20,20,20,.5)";
+              ctx.fillRect(app.main.WIDTH/2 - 300, app.main.HEIGHT/4 - 40, 600, 100);
+              app.main.fillText(app.main.ctx,app.main.itemText, app.main.WIDTH/2, app.main.HEIGHT/4, "40pt Permanent Marker", "black");
+              app.main.fillText(app.main.ctx,app.main.descriptionText, app.main.WIDTH/2, app.main.HEIGHT/4 + 40, "20pt Permanent Marker", "black");
+              ctx.restore();
+          }
+      }
+
+  };// end app.main
+  </script>
+  
+  <script> //Loader.js
+  "use strict";
+
+  // if app exists use the existing copy
+  // else create a new empty object literal
+  var app = app || {};
+
+
+  const GameStart = () =>{
+      console.log("window.onload called");
+
+      app.queue = new createjs.LoadQueue(false);
+      app.queue.installPlugin(createjs.Sound);
+      app.queue.on("complete", function(){
+          console.log("images loaded called");
+          app.sound.init();
+          app.main.sound = app.sound;
+          app.main.Emitter = app.Emitter;
+          app.main.init();
+      });
+
+      app.queue.loadManifest([
+       {id: "enemyImage", src:"media/zombiesheet.png"},
+       {id: "deer", src:"media/deer.png"},
+       {id: "bear", src:"media/bear.png"},
+       {id: "bunny", src:"media/bunny.png"},
+       {id: "wolf", src:"media/wolf.png"},
+       {id: "pill", src:"media/pill.png"},
+       {id: "mushroom", src:"media/mushroom.png"},
+       {id: "flower1", src:"media/flower1.png"},
+       {id: "flower2", src:"media/flower2.png"},
+       {id: "plant", src:"media/plant3.png"},
+       {id: "ground", src:"media/grass.png"}
+      ]);
+  };
+  </script>
+  
+  <script>
+  function timerCall(){
+	var d = new Date();
+	var n = d.getTime();
+	return n;
+  }
+
+  //-----------Positive-----------
+  var OnFire = {
+      x: 0,
+      y: 0,
+      name: "On Fire",
+      description: "YOU'RE ON FIRE",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      doEffect: function(player, enemy){
+          app.main.playerOnFire = !app.main.playerOnFire;
+      }
+  };
+
+  var RangeUp = {
+      x: 0,
+      y: 0,
+      name: "Range Up",
+      description: "shoot farther",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      beingUsed: false,
+      timeActive: 0,
+      doEffect: function(player){
+          if(app.main.beingUsed == false){
+              app.main.timeActive = timerCall();
+              player.maxDistance += 20;
+              app.main.beingUsed = true;
+              app.main.active = false;
+              console.log("Range Up");
+          }else{
+              player.maxDistance -= 20;
+              app.main.beingUsed = false;
+              app.main.timeActive = 0;
+          }
+
+      }
+  };
+
+  var BulletSizeUp = {
+      x: 0,
+      y: 0,
+      name: "Bullet Up",
+      description: "larger bullets",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      beingUsed: false,
+      timeActive: 0,
+      doEffect: function(player){
+          if(app.main.beingUsed == false){
+              app.main.timeActive = timerCall();
+              app.main.bulletSize += 1;
+              app.main.beingUsed = true;
+              app.main.active = false;
+              console.log("Bullet Up");
+          }else{
+              app.main.bulletSize -= 1;
+              app.main.beingUsed = false;
+              app.main.timeActive = 0;
+          }
+      }
+  };
+
+  var SlowEnemy = {
+      x: 0,
+      y: 0,
+      name: "Slow Enemy",
+      description: "enemies are hindered",
+      radius: 20,
+      onGround: false,
+      slowEnemy: true,
+      active: false,
+      image: undefined,
+      beingUsed: false,
+      timeActive: 0,
+      doEffect: function(){
+          if(app.main.beingUsed == false){
+              app.main.timeActive = timerCall();
+              for(var i = 0; i < app.main.enemies.length; i++){
+                  var e = app.main.enemies[i];
+                  e.speed /= 2;
+              }
+              app.main.beingUsed = true;
+              app.main.active = false;
+              console.log("Slow Enemy");
+          }else{
+              for(var i = 0; i < app.main.enemies.length; i++){
+                  var e = app.main.enemies[i];
+                  e.speed *= 2;
+              }
+              app.main.beingUsed = false;
+              app.main.timeActive = 0;
+          }
+      }
+  };
+  //-----------Negative-----------
+  var EnemyFiresBulletsLethal = {
+      x: 0,
+      y: 0,
+      name: "Enemies Spit Bullets",
+      description: "LOOKOUT",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      beingUsed: false,
+      timeActive: 0,
+      doEffect: function(player){
+          app.main.eBullActive = true;
+          app.main.eBullLethal = true;
+      }
+  };
+
+  var RangeDown = {
+      x: 0,
+      y: 0,
+      name: "Range Down",
+      description: "shoot not so far",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      beingUsed: false,
+      timeActive: 0,
+      doEffect: function(player){
+          if(app.main.beingUsed == false){
+              app.main.timeActive = timerCall();
+              player.maxDistance -= 20;
+              app.main.beingUsed = true;
+              app.main.active = false;
+              console.log("Range Down");
+          }else{
+              player.maxDistance += 20;
+              app.main.beingUsed = false;
+              app.main.timeActive = 0;
+          }
+      }
+  };
+
+  var SlowAll = {
+      x: 0,
+      y: 0,
+      name: "Slow Down",
+      description: "everything gets slower",
+      radius: 20,
+      onGround: false,
+      slowAll: true,
+      active: false,
+      image: undefined,
+      beingUsed: false,
+      timeActive: 0,
+      doEffect: function(player){
+          if(app.main.beingUsed == false){
+              app.main.timeActive = timerCall();
+              for(var i = 0; i < app.main.enemies.length; i++){
+                  var e = app.main.enemies[i];
+                  e.speed /= 2;
+              }
+              player.speed /= 2;
+              app.main.beingUsed = true;
+              app.main.active = false;
+              console.log("Speed");
+          }else{	
+              for(var i = 0; i < app.main.enemies.length; i++){
+                  var e = app.main.enemies[i];
+                  e.speed *= 2;
+              }
+              player.speed *= 2;
+              app.main.beingUsed = false;
+              app.main.timeActive = 0;
+          }
+      }
+  };
+
+  var BulletSizeDown = {
+      x: 0,
+      y: 0,
+      name: "Bullet Down",
+      description: "smaller bullets",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      beingUsed: false,
+      timeActive: 0,
+      doEffect: function(player){
+          if(app.main.beingUsed == false){
+              app.main.timeActive = timerCall();
+              app.main.bulletSize -= 1;
+              console.log("Bullet Down");
+              app.main.beingUsed = true;
+              app.main.active = false;
+          }else{
+              app.main.bulletSize += 1;
+              app.main.beingUsed = false;
+              app.main.timeActive = 0;
+          }
+      }
+  };
+
+  //-----------Neutral------------
+  var EnemyFiresBulletsNonLethal = {
+      x: 0,
+      y: 0,
+      name: "Enemies Spit Bullets",
+      description: "...nerf bullets",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      beingUsed: false,
+      timeActive: 0,
+      doEffect: function(player){
+          app.main.eBullActive = true;
+          app.main.eBullLethal = false;
+      }
+  };
+
+  var NegativeColor = {
+      x: 0,
+      y: 0,
+      name: "Negative",
+      description: "what happened to the colors?",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      beingUsed: false,
+      timeActive: 0,
+      doEffect: function(player){
+          if(app.main.beingUsed == false){
+              app.main.timeActive = timerCall();
+              app.main.invert = !app.main.invert;
+              console.log("Negative");
+              app.main.beingUsed = true;
+              app.main.active = false;
+          }else{
+              app.main.invert = app.main.invert;
+              app.main.beingUsed = false;
+              app.main.timeActive = 0;
+          }
+      }
+  };
+
+  var EnemySizeUp = {
+      x: 0,
+      y: 0,
+      name: "Enemy Size Up",
+      description: "David vs Goliaths",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      doEffect: function(player){
+          app.main.ENEMY_RADIUS+=4;
+          for (var i = 0; i < app.main.enemies.length; i++){
+              var e = app.main.enemies[i];
+              e.radius = app.main.ENEMY_RADIUS;
+          }
+          app.main.active = false;
+          console.log("Enemy Size Up");
+      }
+  };
+
+  var EnemySizeDown = {
+      x: 0,
+      y: 0,
+      name: "Enemy Size Down",
+      description: "Goliath vs Davids",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      doEffect: function(player){
+          app.main.ENEMY_RADIUS-=4;
+          for (var i = 0; i < app.main.enemies.length; i++){
+              var e = app.main.enemies[i];
+              e.radius = app.main.ENEMY_RADIUS;
+          }
+          app.main.active = false;
+          console.log("Enemy Size Down");
+      }
+  };
+
+  var PlayerSizeUp = {
+      x: 0,
+      y: 0,
+      name: "Player Size Up",
+      description: "stop eating so much",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      doEffect: function(player){
+          player.radius +=4;
+          app.main.active = false;
+          console.log("Player Size Up");
+      }
+  };
+
+  var PlayerSizeDown = {
+      x: 0,
+      y: 0,
+      name: "Player Size Down",
+      description: "you should eat more",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      doEffect: function(player){
+          player.radius -= 4;
+          app.main.active = false;
+          console.log("Player Size Down");
+      }
+  };
+
+  var EveryoneSizeUp = {
+      x: 0,
+      y: 0,
+      name: "SIZE UP",
+      description: "is the room shrinking?",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      doEffect: function(player){
+          app.main.ENEMY_RADIUS+=4;
+          for (var i = 0; i < app.main.enemies.length; i++){
+              var e = app.main.enemies[i];
+              e.radius = app.main.ENEMY_RADIUS;
+          }
+          app.main.active = false;
+          console.log("Everyone Size Up");
+      }
+  };
+
+
+
+  var EveryoneSizeDown = {
+      x: 0,
+      y: 0,
+      name: "SIZE DOWN",
+      description: "everything feels... bigger",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      doEffect: function(player){
+          app.main.ENEMY_RADIUS-=4;
+          for (var i = 0; i < app.main.enemies.length; i++){
+              var e = app.main.enemies[i];
+              e.radius = app.main.ENEMY_RADIUS;
+          }
+          app.main.active = false;
+          console.log("Everyone Size Down");
+      }
+  };
+
+  //Health
+
+  var HalfHealth = {
+      x: 0,
+      y: 0,
+      name: "Half Health",
+      description: "you're at half health",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      doEffect: function(player){
+          app.main.PLAYER.health = ((app.main.PLAYER.maxHealth)/2);
+          app.main.active = false;
+          console.log("player at half health");
+      }
+  };
+  var FullHealth = {
+      x: 0,
+      y: 0,
+      name: "Full Health",
+      description: "you have full health",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      doEffect: function(player){
+          app.main.PLAYER.health = app.main.PLAYER.maxHealth;
+          app.main.active = false;
+          console.log("player at full health");
+      }
+  };
+
+  var HealthUp = {
+      x: 0,
+      y: 0,
+      name: "Health Up",
+      description: "more health",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      doEffect: function(player){
+          app.main.PLAYER.maxHealth ++;
+          app.main.PLAYER.health ++;
+          app.main.active = false;
+          console.log("Max health increased, player slightly healed");
+      }
+  };
+  var HealthDown = {
+      x: 0,
+      y: 0,
+      name: "health down",
+      description: "you have less health",
+      radius: 20,
+      onGround: false,
+      active: false,
+      image: undefined,
+      doEffect: function(player){
+          app.main.PLAYER.maxHealth --;
+          app.main.PLAYER.health --;
+          app.main.active = false;
+          console.log("Max health decreased, player slightly damaged");
+      }
+  };
+
+  var myTemporaryItems = [OnFire, EnemyFiresBulletsLethal, EnemyFiresBulletsNonLethal, RangeUp, RangeDown, SlowEnemy, SlowAll, NegativeColor, BulletSizeDown, BulletSizeUp,EnemySizeUp,EnemySizeDown,PlayerSizeUp,PlayerSizeDown, EveryoneSizeUp, EveryoneSizeDown];
+
+  </script>
+  
+  <script>
+  "use strict";
+
+  var myKeys = {};
+
+  myKeys.KEYBOARD = Object.freeze({
+      "KEY_LEFT": 37, 
+      "KEY_UP": 38, 
+      "KEY_RIGHT": 39, 
+      "KEY_DOWN": 40,
+      "KEY_W": 87, 
+      "KEY_A": 65, 
+      "KEY_S": 83, 
+      "KEY_D": 68,
+      "KEY_SPACE": 32,
+      "KEY_SHIFT": 16
+  });
+
+  // myKeys.keydown array to keep track of which keys are down
+  // this is called a "key daemon"
+  // main.js will "poll" this array every frame
+  // this works because JS has "sparse arrays" - not every language does
+  myKeys.keydown = [];
+
+
+  // event listeners
+  window.addEventListener("keydown",function(e){
+      //console.log("keydown=" + e.keyCode);
+      myKeys.keydown[e.keyCode] = true;
+
+  });
+
+  window.addEventListener("keyup",function(e){
+      //console.log("keyup=" + e.keyCode);
+      myKeys.keydown[e.keyCode] = false;
+
+      // pausing and resuming
+      var char = String.fromCharCode(e.keyCode);
+      if (char == "p" || char == "P"){
+          if (app.main.paused){
+              app.main.resumeGame();
+          } else {
+              app.main.pauseGame();
+          }
+      }
+      //debugger;
+
+
+  });
+
+  app.IMAGES = {
+      enemyImage: "media/zombiesheet.png",
+      playerImage: "media/playersheet.png",
+      deer: "media/deer.png",
+      bear: "media/bear.png",
+      bunny: "media/bunny.png",
+      wolf: "media/wolf.png",
+      pill : "media/pill.png",
+      mushroom : "media/mushroom.png",
+      flower1 : "media/flower1.png",
+      flower2 : "media/flower2.png",
+      plant : "media/plant3.png",
+      ground : "media/grass.png"
+  };
+  </script>
+  
+  <script>
+  "use strict";
+  // if app exists use the existing copy
+  // else create a new object literal
+  // Sound Credit: http://www.freesound.org/people/M-RED/sounds/41722/
+  // Player Hurt: http://www.freesound.org/people/alex_audio/sounds/188568/
+  // Enemy Hurt: http://www.freesound.org/people/borralbi/sounds/194451/
+  var app = app || {};
+
+  // define the .sound module and immediately invoke it in an IIFE
+  app.sound = (function(){
+      console.log("sound.js module loaded");
+      var bgAudio = undefined;
+      var effectAudio = undefined;
+
+
+      function init(){
+          bgAudio = document.querySelector("#bgAudio");
+          bgAudio.volume=0.25;
+          effectAudio = document.querySelector("#effectAudio");
+          effectAudio.volume = 0.3;
+      }
+
+      function stopBGAudio(){
+          bgAudio.pause();
+          bgAudio.currentTime = 0;
+      }
+
+      function playBGAudio(){
+          bgAudio.play();
+      }
+
+      function playPlayerHurtEffect(){
+          bgAudio.play();
+          effectAudio.src = "media/PlayerHurt.mp3";
+          effectAudio.play();
+      }
+
+      function playEnemyHurtEffect(){
+          bgAudio.play();
+          effectAudio.src = "media/EnemyHurt.wav";
+          effectAudio.play();
+      }
+
+      return{
+          init: init,
+          stopBGAudio,
+          playPlayerHurtEffect: playPlayerHurtEffect,
+          playEnemyHurtEffect: playEnemyHurtEffect,
+          playBGAudio: playBGAudio
+      };
+
+      // export a public interface to this module
+      // TODO
+  }());
+  </script>
+  
+  <script>
+  "use strict";
+
+  // returns mouse position in local coordinate system of element
+  function getMouse(e){
+      var mouse = {} // make an object
+      mouse.x = e.pageX - e.target.offsetLeft;
+      mouse.y = e.pageY - e.target.offsetTop;
+      return mouse;
+  }
+
+  function getRandom(min, max) {
+      return Math.random() * (max - min) + min;
+  }
+
+
+  function makeColor(red, green, blue, alpha){
+      var color='rgba('+red+','+green+','+blue+', '+alpha+')';
+      return color;
+  }
+
+  // Function Name: getRandomColor()
+  // returns a random color of alpha 1.0
+  // http://paulirish.com/2009/random-hex-color-code-snippets/
+  function getRandomColor(){
+      var red = Math.round(Math.random()*200+55);
+      var green = Math.round(Math.random()*200+55);
+      var blue=Math.round(Math.random()*200+55);
+      var color='rgb('+red+','+green+','+blue+')';
+      // OR	if you want to change alpha
+      // var color='rgba('+red+','+green+','+blue+',0.50)'; // 0.50
+      return color;
+  }
+
+  function getRandomUnitVector(){
+      var x = getRandom(-1,1);
+      var y = getRandom(-1,1);
+      var length = Math.sqrt(x*x + y*y);
+      if(length == 0){ // very unlikely
+          x=1; // point right
+          y=0;
+          length = 1;
+      } else{
+          x /= length;
+          y /= length;
+      }
+
+      return {x:x, y:y};
+  }
+
+  function simplePreload(imageArray){
+      // loads images all at once
+      for (var i = 0; i < imageArray.length; i++) {
+          var img = new Image();
+          img.src = imageArray[i];
+      }
+  }
+
+
+  function loadImagesWithCallback(sources, callback) {
+      var imageObjects = [];
+      var numImages = sources.length;
+      var numLoadedImages = 0;
+
+      for (var i = 0; i < numImages; i++) {
+        imageObjects[i] = new Image();
+        imageObjects[i].onload = function() {
+          numLoadedImages++;
+          console.log("loaded image at '" + app.main.src + "'")
+          if(numLoadedImages >= numImages) {
+            callback(imageObjects); // send the images back
+          }
+        };
+        imageObjects[i].src = sources[i];
+      }
+    }
+
+
+  /*
+  Function Name: clamp(val, min, max)
+  Author: Web - various sources
+  Return Value: the constrained value
+  Description: returns a value that is
+  constrained between min and max (inclusive) 
+  */
+  function clamp(val, min, max){
+      return Math.max(min, Math.min(max, val));
+  }
+
+
+   // FULL SCREEN MODE
+  function requestFullscreen(element) {
+      if (element.requestFullscreen) {
+        element.requestFullscreen();
+      } else if (element.mozRequestFullscreen) {
+        element.mozRequestFullscreen();
+      } else if (element.mozRequestFullScreen) { // camel-cased 'S' was changed to 's' in spec
+        element.mozRequestFullScreen();
+      } else if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+      }
+      // .. and do nothing if the method is not supported
+  };
+
+
+  // This gives Array a randomElement() method
+  Array.prototype.randomElement = function(){
+      return this[Math.floor(Math.random() * app.main.length)];
+  }
+
+  // http://stackoverflow.com/questions/2212604/javascript-check-mouse-clicked-inside-the-circle-or-polygon
+  // using 'distance squared' here, why?
+  // I is for "Instance"
+  function pointInsideCircle(x, y, I) {
+      var dx = x - I.x;
+      var dy = y - I.y;
+      return dx * dx + dy * dy <= I.radius * I.radius;
+  }
+
+  function circlesIntersect(c1, c2){
+      var dx = c2.x - c1.x;
+      var dy = c2.y - c1.y;
+      var distance = Math.sqrt(dx*dx + dy*dy);
+      return distance < c1.radius + c2.radius;
+  }
+
+
+  </script>
 	<title>Random Arena</title>
 </head>
 <body>
