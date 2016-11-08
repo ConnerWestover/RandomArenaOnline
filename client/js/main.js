@@ -22,6 +22,7 @@ var app = app || {};
 app.main = {
 	//  properties
   socket: undefined,
+	room: 0,
   
   WIDTH : 1200,
   HEIGHT: 800, 
@@ -183,20 +184,39 @@ app.main = {
 		this.gameState = this.GAME_STATE.MAIN_MENU;
 		this.canvas.onmousedown = this.doMousedown.bind(this);
 		
+		
+		socket = io.connect();
+		
+		socket.emit('CreateRoomWithName', {name: roomName});
+		socket.on('ReceiveHostRoomCheck', (data) => {
+			if (data.success == true){
+				amHost == true;
+			}else{
+				amHost == false;
+			}
+		});
+		
+		
+		socket.emit('FindRoomWithName', {name: roomName});
+		socket.on('RecieveFindRoomCheck', (data) =>{
+			if (data.success == true){
+				room = data.index;
+				numPlayers == data.playersInLobby
+				//data.host not used
+			}
+		});
+		
 		// - SERVER HERE -
 		// - NEED NUMBER OF PLAYERS -
 		if (amHost == true){
 			for(var i = 0; i < numPlayers; i++){
 				this.players.add(this.makePlayer());
 			}
-		}
-		
-		if(amHost == true){
 			this.enemies = this.makeEnemy(this.numEnemies);
-		}
-		
-		if(amHost == true){
 			this.reset();
+			
+			
+			socket.emit('StartGame', (room)); //not sure where this goes
 		}
 		
 		this.update();
