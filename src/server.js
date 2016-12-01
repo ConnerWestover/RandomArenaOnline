@@ -89,6 +89,40 @@ const onSetupSockets = (sock) => {
   socket.on('StartGame', (room) => {
     socket.to(room).emit('StartPlay', {});
   });
+	
+	socket.on('PassInformationToPlayers', (data) =>{
+		if(data != null){
+			socket.emit('InformationSentCheck', {
+				success: true,
+			});
+			socket.emit('RecieveInformation', {
+				players: data.players,
+				enemies: data.enemies, 
+				//probably needs more, address as we go
+			});
+		} else {
+			socket.emit('InformationSentCheck', {
+				success: false,
+				reason: 'DATA NOT FOUND'
+			})
+		}
+	});
+	
+	socket.on('PassInputToHost', (data) =>{
+		if(data != null){
+			socket.emit('InputSentCheck', {
+				success: true,
+			});
+			socket.emit('RecieveInput', {
+				//stuff
+			});
+		} else {
+			socket.emit('InputSentCheck', {
+				success: false,
+				reason: 'DATA NOT FOUND'
+			});
+		}
+	});
 };
 
 io.sockets.on('connection', (socket) => {

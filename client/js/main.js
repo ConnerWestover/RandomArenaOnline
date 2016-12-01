@@ -216,7 +216,7 @@ app.main = {
 			this.reset();
 			
 			
-			socket.emit('StartGame', (room)); //not sure where this goes
+			socket.emit('StartGame', (room)); //not sure where this goes, perhaps bound to some onclick event
 		}
 		
 		this.update();

@@ -712,14 +712,8 @@
               for(var i = 0; i < numPlayers; i++){
                   app.main.players.add(app.main.makePlayer());
               }
-          }
-
-          if(app.main.amHost == true){
-              app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
-          }
-
-          if(app.main.amHost == true){
-              app.main.reset();
+							app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
+							app.main.reset();
           }
 
           app.main.update();
