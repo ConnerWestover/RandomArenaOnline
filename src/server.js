@@ -103,8 +103,14 @@ const onSetupSockets = (sock) => {
 		} else {
 			socket.emit('InformationSentCheck', {
 				success: false,
-				reason: 'DATA NOT FOUND'
+				reason: 'DATA NOT FOUND',
 			})
+		}
+	});
+	
+	socket.on('RecieveInformationCheck', (data) =>{
+		if(data.success == false){
+			console.log(`${reason}`);
 		}
 	});
 	
@@ -119,7 +125,7 @@ const onSetupSockets = (sock) => {
 		} else {
 			socket.emit('InputSentCheck', {
 				success: false,
-				reason: 'DATA NOT FOUND'
+				reason: 'DATA NOT FOUND',
 			});
 		}
 	});

@@ -788,6 +788,33 @@
               // - UPDATE OTHER PLAYER POSITIONS/STATUS IF HOST -
               // - SEND ENEMY POSITIONS IF HOST -
               // - SEND PLAYER POSITION/STATUS IF PARTY -
+						
+							if(app.main.amHost == true){
+								socket.emit('PassInformationToPlayers', {
+										players: app.main.players,
+										enemies: app.main.enemies,
+									});
+								socket.on('InformationSentCheck', (data) =>{
+										if (data.success == false){
+											console.log(`${reason}`);
+										}
+								});
+							} else {
+								socket.on('RecieveInformation', (data) => {
+										if(data != null){
+											socket.emit('RecieveInformationCheck', {
+												success: true,
+											})
+											app.main.players == data.players,
+											app.main.enemies == data.enemies
+										} else {
+											socket.emit('RecieveInformationCheck', {
+												success: false,
+												reason: 'DATA NOT FOUND'
+											});
+										}
+								});
+							}
               app.main.PLAYER.update(dt);
 
               if(app.main.gameState != app.main.GAME_STATE.ROUND_OVER){
