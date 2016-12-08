@@ -312,6 +312,7 @@ app.main = {
 			if(amHost == true){
 				this.checkTemporary();
 				this.checkEnemiesDead();
+                
 			}
 		}
 		

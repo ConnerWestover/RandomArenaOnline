@@ -151,6 +151,7 @@
       
       socket.on('StartPlay', (data)=>{
         state = MenuState.PLAYING;
+        console.log("Start Play");
         GameStart();
       });
     };
@@ -552,8 +553,6 @@
              mouse.y > HEIGHT*18/20 && mouse.y < HEIGHT*19/20){
             socket.emit('StartGame', room);
             state = MenuState.PLAYING;
-            console.log(app);
-            console.log(app.main);
             GameStart();
           }
         }
@@ -619,6 +618,7 @@
     paused: false, 
     animationID: 0,
     sound: undefined,
+    room: undefined,
 
     gameState: undefined,
     roundScore: 0,
@@ -645,7 +645,7 @@
       playerOnFire: false,
 
       amHost: false,
-      numPlayers: 0,
+      numPlayers: 1,
       players: [],
       playersDead: 0,
 
@@ -704,19 +704,46 @@
           app.main.totalScore = 0;
           app.main.gameState = 1;
           //app.main.canvas.onmousedown = app.main.doMousedown.bind(this);
+          app.main.makeSockets(app.main.socket);  
+          //app.main.socket.emit('GetGameRoomInfo', app.main.room);
+        
+      },
+    
+      makeSockets: (sock) =>{
+        let socket = sock;
+        
+        socket.on('ReceiveGameRoomInfo', (data) =>{
           
-          console.log(this);
-          // - SERVER HERE -
-          // - NEED NUMBER OF PLAYERS -
-          if (app.main.amHost == true){
-              for(var i = 0; i < numPlayers; i++){
-                  app.main.players.add(app.main.makePlayer());
-              }
-							app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
-							app.main.reset();
-          }
+          app.main.numPlayers = data.numPlayers;
 
-          app.main.update();
+          //Use data.playersFromLobby to create classes
+          
+          app.main.amHost = true;
+          app.main.room = data.room;
+          
+          for(var i = 0; i < app.main.numPlayers; i++){
+              app.main.players[i] = app.main.makePlayer();
+          }
+          console.log(app.main.players.length);
+          app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
+          app.main.reset();
+
+          window.setInterval(() => {
+            app.main.update()
+          }, 17);
+          
+        });
+        
+        socket.on('PlayersReceiveGameInfo', (data) => {
+          app.main.players = data.players;
+          app.main.numPlayers = data.playerCount;
+          app.main.enemies = data.enemies;
+          app.main.room = data.name;
+          
+          window.setInterval(() => {
+            app.main.update()
+          }, 17);
+        });
       },
 
       // - HOST ONLY -
@@ -730,7 +757,6 @@
 
       // - EVERYONE -
       update: () => {
-          console.log("Update Called");
           //app.main.animationID = requestAnimationFrame(app.main.update.bind(this));
 
           app.main.ctx.clearRect(0,0,app.main.WIDTH, app.main.HEIGHT);
@@ -760,87 +786,74 @@
                   app.main.enemyShoot();
               }
               //update everyone
-              if(myKeys.keydown[myKeys.KEYBOARD.KEY_W]){
-                  app.main.PLAYER.moveY(-dt);
-              }	
-              if (myKeys.keydown[myKeys.KEYBOARD.KEY_S]){
-                  app.main.PLAYER.moveY(dt);
-              } 
-              if (myKeys.keydown[myKeys.KEYBOARD.KEY_A]){
-                  app.main.PLAYER.moveX(-dt);
-              } 
-              if (myKeys.keydown[myKeys.KEYBOARD.KEY_D]){
-                  app.main.PLAYER.moveX(dt);
-              } 
-              if(myKeys.keydown[myKeys.KEYBOARD.KEY_UP]){
-                  app.main.PLAYER.fireUp();
-              }	
-              if (myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN]){
-                  app.main.PLAYER.fireDown();
-              } 
-              if (myKeys.keydown[myKeys.KEYBOARD.KEY_LEFT]){
-                  app.main.PLAYER.fireLeft();
-              } 
-              if (myKeys.keydown[myKeys.KEYBOARD.KEY_RIGHT]){
-                  app.main.PLAYER.fireRight();
-              } 
-              // - SERVER HERE -
-              // - UPDATE OTHER PLAYER POSITIONS/STATUS IF HOST -
-              // - SEND ENEMY POSITIONS IF HOST -
-              // - SEND PLAYER POSITION/STATUS IF PARTY -
-						
-							if(app.main.amHost == true){
-								socket.emit('PassInformationToPlayers', {
-										players: app.main.players,
-										enemies: app.main.enemies,
-									});
-								socket.on('InformationSentCheck', (data) =>{
-										if (data.success == false){
-											console.log(`${reason}`);
-										}
-								});
-							} else {
-								socket.on('RecieveInformation', (data) => {
-										if(data != null){
-											socket.emit('RecieveInformationCheck', {
-												success: true,
-											})
-											app.main.players == data.players,
-											app.main.enemies == data.enemies
-										} else {
-											socket.emit('RecieveInformationCheck', {
-												success: false,
-												reason: 'DATA NOT FOUND'
-											});
-										}
-								});
-							}
-              app.main.PLAYER.update(dt);
+              if(app.main.amHost){
+                if(myKeys.keydown[myKeys.KEYBOARD.KEY_W]){
+                    app.main.players[0].moveY(-dt);
+                }	
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_S]){
+                    app.main.players[0].moveY(dt);
+                } 
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_A]){
+                    app.main.players[0].moveX(-dt);
+                } 
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_D]){
+                    app.main.players[0].moveX(dt);
+                } 
+                if(myKeys.keydown[myKeys.KEYBOARD.KEY_UP]){
+                    app.main.players[0].fireUp();
+                }	
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN]){
+                    app.main.players[0].fireDown();
+                } 
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_LEFT]){
+                    app.main.players[0].fireLeft();
+                } 
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_RIGHT]){
+                    app.main.players[0].fireRight();
+                }
+              
+                // - SERVER HERE -
+                // - UPDATE OTHER PLAYER POSITIONS/STATUS IF HOST -
+                // - SEND ENEMY POSITIONS IF HOST -
+                // - SEND PLAYER POSITION/STATUS IF PARTY -
+
+                for (var p = 0; p < app.main.players.length; p++){
+                  app.main.players[p].update(dt);
+                }
+              }
 
               if(app.main.gameState != app.main.GAME_STATE.ROUND_OVER){
                   app.main.drawOnGroundItems(app.main.ctx);
               }
               //draw things
               if (app.main.gameState == app.main.GAME_STATE.DEFAULT){
-                  app.main.drawShadows(app.main.ctx);
+                  //app.main.drawShadows(app.main.ctx);
                   app.main.drawEnemy(app.main.ctx);
               }
-              app.main.PLAYER.draw(app.main.ctx);
+              for (var p = 0; p < app.main.players.length; p++){
+                app.main.players[p].draw(app.main.ctx);
+              };
               //draw hud
               app.main.drawItemText(app.main.ctx);
               app.main.drawHUD(app.main.ctx);
 
               // - HOST ONLY -
-              if(app.main.amHost == true){
+              if(app.main.amHost){
                   app.main.checkTemporary();
                   app.main.checkEnemiesDead();
+                  app.main.socket.emit('HostUpdatesGameInfo', {
+                    players: app.main.players,
+                    playerCount: app.main.numPlayers,
+                    enemies: app.main.enemies,
+                    room: app.main.room,
+                  });
               }
           }
 
           if(app.main.gameState == app.main.GAME_STATE.ROUND_OVER){
               app.main.drawHUD(app.main.ctx);
               if(myKeys.keydown[myKeys.KEYBOARD.KEY_SPACE]){
-                  if (app.main.PLAYER.health <= 0){
+                  if (app.main.players[0].health <= 0){
                     //TODO: End Game Score kick to lobby
                     //app.main.gameState = app.main.GAME_STATE.MAIN_MENU;
                   } else {
@@ -851,6 +864,15 @@
                   }
               }
           }
+        if(app.main.amHost){
+          var info = {
+            players: app.main.players,
+            playerCount: app.main.numPlayers,
+            enemies: app.main.enemies,
+            room: room,
+          };
+          socket.emit('HostUpdatesGameInfo', info);
+        }
       },
 
       // - EVERYONE -
@@ -870,7 +892,7 @@
 
           // - SERVER HERE -
           // - SEND SCORE IF HOST -
-
+          
           ctx.save();
           // draw score
           // fillText(app.main.ctx,string, x, y, css, color)
@@ -881,7 +903,7 @@
           ctx.strokeStyle = "black";
           ctx.fillRect(5,5, 200, 40);
           ctx.fillStyle = "red";
-          ctx.fillRect(5,5,200 * (app.main.PLAYER.health/app.main.PLAYER.maxHealth),40);
+          //ctx.fillRect(5,5,200 * (app.main.PLAYER.health/app.main.PLAYER.maxHealth),40);
           ctx.strokeRect(5,5, 200, 40);
 
 
@@ -910,494 +932,506 @@
 
       // - HOST ONLY -
       makePlayer: function(){
-          var makeBullet = function(x,y,xSpeed, ySpeed, maxDistance){
-              var move = function(dt){
-                  app.main.x += app.main.xSpeed;
-                  app.main.y += app.main.ySpeed;
-                  app.main.traveled += Math.abs(app.main.ySpeed);
-                  app.main.traveled += Math.abs(app.main.xSpeed);
+		var makeBullet = function(x,y,xSpeed, ySpeed, maxDistance){
+			var move = function(dt){
+				this.x += this.xSpeed;
+				this.y += this.ySpeed;
+				this.traveled += Math.abs(this.ySpeed);
+				this.traveled += Math.abs(this.xSpeed);
+				
+				if (this.maxDistance < this.traveled){
+					this.live = false;
+				}
+			};
+			
+			var draw = function(ctx){
+				ctx.save();
+				ctx.fillStyle = "red";
+				ctx.strokeStyle = "black";
+				ctx.beginPath();
+				ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2, false);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+				ctx.restore();
+			};
+			
+			var drawShadow = function(ctx){
+				ctx.save();
+				ctx.fillStyle = "black";
+				ctx.beginPath();
+				ctx.globalAlpha = 0.5;
+				ctx.arc(this.x, this.y + 20 - (20 * (this.traveled/this.maxDistance)), this.radius *.9, 0, Math.PI*2, false);
+				ctx.closePath();
+				ctx.fill();
+				ctx.restore();
+			}
+			
+			var b = {};
+			b.maxDistance = maxDistance;
+			b.traveled = 0;
+			b.power = 1;
+			b.x = this.x;
+			b.y = this.y;
+			b.radius = app.main.bulletSize;
+			b.xSpeed = xSpeed;
+			b.ySpeed = ySpeed;
+			b.live = true
+			b.draw = draw;
+			b.drawShadow = drawShadow;
+			b.move = move;
+			
+			return b;
+		};
+		
+		var fireU = function(){
+			var d = new Date();
+			this.direction = 0;
+			if (this.bullets.length < p.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
+				this.bullets.push(this.makeBullet(this.x,this.y,0,-5,this.maxDistance));
+				this.timeLastFired = d.getTime();
+			}
+		};
+		var fireD = function(){
+			var d = new Date();
+			this.direction = 1;
+			if (this.bullets.length < p.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
+				this.bullets.push(this.makeBullet(this.x,this.y,0,5,this.maxDistance));
+				this.timeLastFired = d.getTime();
+			}
+		};
+		var fireL = function(){
+			var d = new Date();
+			this.direction = 3;
+			if (this.bullets.length < p.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
+				this.bullets.push(this.makeBullet(this.x,this.y,-5,0,this.maxDistance));
+				this.timeLastFired = d.getTime();
+			}
+		};
+		var fireR = function(){
+			var d = new Date();
+			this.direction = 2;
+			if (this.bullets.length < p.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
+				this.bullets.push(this.makeBullet(this.x,this.y,5,0,this.maxDistance));
+				this.timeLastFired = d.getTime();
+			}
+		};
+		var drawPlayer = function(ctx){
+			ctx.save();
+			
+			if(true){ // !this.image
+				ctx.fillStyle = "orange";
+				ctx.fillRect(this.x, this.y, 32, 32);
+			} else {
+				var halfW = this.radius;
+				var halfH = this.radius;
+				if(this.direction == 2){
+					ctx.drawImage(this.image,				
+					0 + this.spriteNumber * 32,64,32,32,		 					
+					this.x- halfW, this.y- halfH, halfW*2, halfH*2
+					);
+				} else if (this.direction == 3) {
+					ctx.drawImage(this.image,				
+					0 + this.spriteNumber * 32,32,32,32,		 					
+					this.x- halfW, this.y- halfH, halfW*2, halfH*2
+					);
+				} else if(this.direction == 1){
+					ctx.drawImage(this.image,				
+					0 + this.spriteNumber * 32,1,32,31,		 					
+					this.x- halfW, this.y- halfH, halfW*2, halfH*2
+					);	
+				} else {
+					ctx.drawImage(this.image,					 					
+					0 + this.spriteNumber * 32,96,32,32,		 					
+					this.x- halfW, this.y- halfH, halfW*2, halfH*2
+					);
+				}
+			}
+			ctx.restore();
+			
+			for (var i = 0; i < this.bullets.length; i++){
+				this.bullets[i].draw(ctx);
+			}
+		};
+		
+		var drawShadow = function(ctx){
+			ctx.save();
+			ctx.fillStyle = "black";
+			ctx.strokeStyle = "black";
+			ctx.globalAlpha = .7;
+			ctx.beginPath();
+			ctx.arc(this.x, this.y+ 12, this.radius*.9, 0, Math.PI*2, false);
+			ctx.fill();
+			ctx.closePath();
+			ctx.stroke();
+			ctx.restore();
+			for (var i = 0; i < this.bullets.length; i++){
+				this.bullets[i].drawShadow(ctx);
+			}
+		}
+		
+		var movePlayerX = function(dt){
+			this.x += this.speed * dt;
+			if(dt > 0){
+				//this.direction = 2;
+			} else {
+				//this.direction = 3;
+			}
+		};
+		
+		var movePlayerY = function(dt){
+			this.y += this.speed * dt;
+			if(dt > 0){
+				//this.direction = 1;
+			} else {
+				//this.direction = 0;
+			}
+		};
+		
+		var update = function(dt){
+			for (var i = 0; i < this.bullets.length; i++){
+				this.bullets[i].move(dt);
+				if(this.bullets[i].live == false) this.bullets.splice(i, 1);
+			}
+			if (this.x - this.radius < 0) this.x = this.radius;
+			if (this.x + this.radius > app.main.WIDTH) this.x = app.main.WIDTH - this.radius;
+			if (this.y - this.radius < 0) this.y = this.radius;
+			if (this.y + this.radius > app.main.HEIGHT) this.y = app.main.HEIGHT - this.radius;
+			
+			if (this.gotHit){
+				var d = new Date();
+				//this.pulsar.updateAndDraw(this.ctx, {x:this.PLAYER.x, y: this.PLAYER.y});
+				if (d.getTime() - this.timeGotHit > 1000){
+					this.gotHit = false;
+				}
+			}
+			
+			var d = new Date();
+			if (d.getTime() - this.timeLastSpriteChanged > 250){
+				this.timeLastSpriteChanged = d.getTime();
+				this.spriteNumber++;
+				if (this.spriteNumber > 2){
+					this.spriteNumber = 0;
+				}
+			}
+		}
+		
+		var p = {};
+		p.draw = drawPlayer;
+		p.speed = 150;
+		p.x = this.WIDTH/2;
+		p.y = this.HEIGHT/2;
+		p.moveX = movePlayerX;
+		p.moveY = movePlayerY;
+		p.health = 10;
+		p.maxHealth = 10;
+		p.weapon = "gun";
+		p.attackPower = 1;
+		p.defense = 1;
+		p.radius = 18;
+		p.maxBullets = 10;
+		p.bullets = [];
+		p.makeBullet = makeBullet;
+		p.fireUp = fireU;
+		p.fireDown = fireD;
+		p.fireLeft = fireL;
+		p.fireRight = fireR;
+		p.update = update;
+		p.drawShadow = drawShadow;
+		p.gotHit = false;
+		p.timeGotHit = 0;
+		p.timeLastFired = 0;
+		p.fireRate = 500;
+		p.maxDistance = 600;
+		
+		//Sprite resources
+		p.timeLastSpriteChanged = 0;
+		p.spriteNumber = 0;
+		p.direction = 0; // 0 = up, 1 = down, 2 = right, 3 = left
+			
+		var image = new Image();
+		image.src = app.IMAGES['playerImage'];
+			
+		p.image = image;
+		
+		return p;
+	},
+	
+	makeEnemy: function(num){
+		
+		var makeBullet = function(x,y,xSpeed, ySpeed){
+			var move = function(dt){
+				this.x += this.xSpeed;
+				this.y += this.ySpeed;
+				this.traveled += Math.abs(this.ySpeed);
+				this.traveled += Math.abs(this.xSpeed);
+				
+				if (this.maxDistance < this.traveled){
+					this.live = false;
+				}
+			};
+			
+			var draw = function(ctx){
+				ctx.save();
+				ctx.fillStyle = this.fillStyle;
+				ctx.strokeStyle = "black";
+				ctx.beginPath();
+				ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2, false);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+				ctx.restore();
+			};
+			
+			var drawShadow = function(ctx){
+				ctx.save();
+				ctx.fillStyle = "black";
+				ctx.beginPath();
+				ctx.globalAlpha = 0.5;
+				ctx.arc(this.x, this.y + 20 - (20 * (this.traveled/this.maxDistance)), this.radius *.9, 0, Math.PI*2, false);
+				ctx.closePath();
+				ctx.fill();
+				ctx.restore();
+			}
+			
+			var b = {};
+			if(app.main.eBullLethal == true){
+				b.fillStyle = "red";
+			}else{
+				b.fillStyle = "yellow";
+			}
+			
+			b.maxDistance = 300;
+			b.traveled = 0;
+			b.power = 1;
+			b.x = this.x;
+			b.y = this.y;
+			b.radius = 5;
+			b.xSpeed = xSpeed;
+			b.ySpeed = ySpeed;
+			b.live = true
+			b.draw = draw;
+			b.drawShadow = drawShadow;
+			b.move = move;
+			
+			return b;
+		};
+		
+		var fireU = function(){
+			var d = new Date();
+			this.direction = 0;
+			if (this.bullets.length < e.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
+				this.bullets.push(this.makeBullet(this.x,this.y,0,-5));
+				this.timeLastFired = d.getTime();
+			}
+		};
+		var fireD = function(){
+			var d = new Date();
+			this.direction = 1;
+			if (this.bullets.length < e.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
+				this.bullets.push(this.makeBullet(this.x,this.y,0,5));
+				this.timeLastFired = d.getTime();
+			}
+		};
+		var fireL = function(){
+			var d = new Date();
+			this.direction = 3;
+			if (this.bullets.length < e.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
+				this.bullets.push(this.makeBullet(this.x,this.y,-5,0));
+				this.timeLastFired = d.getTime();
+			}
+		};
+		var fireR = function(){
+			var d = new Date();
+			this.direction = 2;
+			if (this.bullets.length < e.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
+				this.bullets.push(this.makeBullet(this.x,this.y,5,0));
+				this.timeLastFired = d.getTime();
+			}
+		};
+		
+		var enemyDraw = function(ctx){
+			ctx.save();
+			if(true){ // !this.image
+				ctx.fillStyle = "orange";
+				ctx.fillRect(this.x, this.y, 32, 32);
+			} else {
+				var halfW = this.radius;
+				var halfH = this.radius;
+				if( Math.abs(this.xSpeed) >= Math.abs(this.ySpeed)){
+					if(this.xSpeed >= 0){
+						this.fireDirection = 2;
+						ctx.drawImage(this.image,				
+						1 + this.spriteNumber * 32 + this.column * 96,65 + this.row * 128,31,31,		 					
+						this.x- halfW, this.y- halfH, halfW*2, halfH*2
+						);
+					} else {
+						this.fireDirection = 3;
+						ctx.drawImage(this.image,				
+						1 + this.spriteNumber * 32 + this.column * 96,33 + this.row * 128,31,31,		 					
+						this.x- halfW, this.y- halfH, halfW*2, halfH*2
+						);
+					}
+				} else {
+					if(this.ySpeed >= 0){
+						this.fireDirection = 1;
+						ctx.drawImage(this.image,				
+						1 + this.spriteNumber * 32 + this.column * 96,1 + this.row * 128,31,31,		 					
+						this.x- halfW, this.y- halfH, halfW*2, halfH*2
+						);	
+					} else {
+						this.fireDirection = 0;
+						ctx.drawImage(this.image,					 					
+						1 + this.spriteNumber * 32 + this.column * 96,97 + this.row * 128,31,31,		 					
+						this.x- halfW, this.y- halfH, halfW*2, halfH*2
+						);
+					}
+				}
+			}
+			
+			ctx.restore();
+			for (var i = 0; i < this.bullets.length; i++){
+				this.bullets[i].draw(ctx);
+			}
+		};
+		
+		var enemyDrawShadow = function(ctx){
+			ctx.save();
+			ctx.fillStyle = "black";
+			ctx.beginPath();
+			ctx.globalAlpha = .7;
+			ctx.arc(this.x, this.y + 12, this.radius*.9, 0, Math.PI*2, false);
+			ctx.fill();
+			ctx.closePath();
+			ctx.restore();
+			for (var i = 0; i < this.bullets.length; i++){
+				this.bullets[i].drawShadow(ctx);
+			}
+		};
+		
+		var enemyMove = function(dt){
+			for (var i = 0; i < this.bullets.length; i++){
+				this.bullets[i].move(dt);
+				if(this.bullets[i].live == false) this.bullets.splice(i, 1);
+			}
+		
+			this.xSpeed = app.main.PLAYER.x - this.x;
+			this.ySpeed = app.main.PLAYER.y - this.y;
+			
+			var mag = Math.sqrt(this.xSpeed*this.xSpeed + this.ySpeed*this.ySpeed);
+			this.xSpeed /= mag;
+			this.ySpeed /= mag;
+			
+			this.x += this.xSpeed * this.speed * dt;
+			this.y += this.ySpeed * this.speed * dt;
+			
+			//update walk cycle
+			var d = new Date();
+			if (d.getTime() - this.timeLastSpriteChanged > 10000/this.speed){
+				this.timeLastSpriteChanged = d.getTime();
+				this.spriteNumber++;
+				if (this.spriteNumber > 2){
+					this.spriteNumber = 0;
+				}
+			}
+		}
+		
+		var array = [];
+		
+		var d = new Date();
+		var n = d.getTime();
+		
+		for(var i = 0; i < num; i++){
+			var e = {};
+			var door = Math.floor(getRandom(0, 3));
+			//control spawn point
+			if(door == 0){
+				e.x = 30;
+				e.y = this.HEIGHT/2;
+			}
+			else if(door == 1){
+				e.x = this.WIDTH/2;
+				e.y = 30;
+			}
+			else{
+				e.x = this.WIDTH - 30;
+				e.y = this.HEIGHT/2;
+			}
+			
+			e.startTime = n;
+			
+			e.started = false;
+			e.alive = true;
+			
+			//calculate direction to player
+			e.xSpeed = this.PLAYER.x - e.x;
+			e.ySpeed = this.PLAYER.y - e.y;
+			//normalize
+			var mag = Math.sqrt(e.xSpeed*e.xSpeed + e.ySpeed*e.ySpeed);
+			e.xSpeed /= mag;
+			e.ySpeed /= mag;
+			
+			e.speed = Math.floor(getRandom(50, 150));
+			
+			e.health = Math.floor(getRandom(1, 5));
+			e.attackPower = Math.floor(getRandom(1, 3));;
+			e.radius = this.ENEMY_RADIUS;
+			
+			e.draw = enemyDraw;
+			e.drawShadow = enemyDrawShadow;
+			e.move = enemyMove;
+			
+			e.maxBullets = 1;
+			e.bullets = [];
+			e.makeBullet = makeBullet;
+			e.fireUp = fireU;
+			e.fireDown = fireD;
+			e.fireLeft = fireL;
+			e.fireRight = fireR;
+			e.timeLastFired = 0;
+			e.fireRate = 2000;
+			e.fireDirection = 0;
+			
+			e.timeLastSpriteChanged = 0;
+			e.spriteNumber = 0;
 
-                  if (app.main.maxDistance < app.main.traveled){
-                      app.main.live = false;
-                  }
-              };
-
-              var draw = function(ctx){
-                  ctx.save();
-                  ctx.fillStyle = "red";
-                  ctx.strokeStyle = "black";
-                  ctx.beginPath();
-                  ctx.arc(app.main.x, app.main.y, app.main.radius, 0, Math.PI*2, false);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
-                  ctx.restore();
-              };
-
-              var drawShadow = function(ctx){
-                  ctx.save();
-                  ctx.fillStyle = "black";
-                  ctx.beginPath();
-                  ctx.globalAlpha = 0.5;
-                  ctx.arc(app.main.x, app.main.y + 20 - (20 * (app.main.traveled/app.main.maxDistance)), app.main.radius *.9, 0, Math.PI*2, false);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.restore();
-              }
-
-              var b = {};
-              b.maxDistance = maxDistance;
-              b.traveled = 0;
-              b.power = 1;
-              b.x = app.main.x;
-              b.y = app.main.y;
-              b.radius = app.main.bulletSize;
-              b.xSpeed = xSpeed;
-              b.ySpeed = ySpeed;
-              b.live = true
-              b.draw = draw;
-              b.drawShadow = drawShadow;
-              b.move = move;
-
-              return b;
-          };
-
-          var fireU = function(){
-              var d = new Date();
-              app.main.direction = 0;
-              if (app.main.bullets.length < p.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
-                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,0,-5,app.main.maxDistance));
-                  app.main.timeLastFired = d.getTime();
-              }
-          };
-          var fireD = function(){
-              var d = new Date();
-              app.main.direction = 1;
-              if (app.main.bullets.length < p.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
-                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,0,5,app.main.maxDistance));
-                  app.main.timeLastFired = d.getTime();
-              }
-          };
-          var fireL = function(){
-              var d = new Date();
-              app.main.direction = 3;
-              if (app.main.bullets.length < p.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
-                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,-5,0,app.main.maxDistance));
-                  app.main.timeLastFired = d.getTime();
-              }
-          };
-          var fireR = function(){
-              var d = new Date();
-              app.main.direction = 2;
-              if (app.main.bullets.length < p.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
-                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,5,0,app.main.maxDistance));
-                  app.main.timeLastFired = d.getTime();
-              }
-          };
-          var drawPlayer = function(ctx){
-              ctx.save();
-
-              if(!app.main.image){
-                  ctx.fillStyle = "orange";
-                  ctx.fillRect(app.main.x, app.main.y, 32, 32);
-              } else {
-                  var halfW = app.main.radius;
-                  var halfH = app.main.radius;
-                  if(app.main.direction == 2){
-                      ctx.drawImage(app.main.image,				
-                      0 + app.main.spriteNumber * 32,64,32,32,		 					
-                      app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
-                      );
-                  } else if (app.main.direction == 3) {
-                      ctx.drawImage(app.main.image,				
-                      0 + app.main.spriteNumber * 32,32,32,32,		 					
-                      app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
-                      );
-                  } else if(app.main.direction == 1){
-                      ctx.drawImage(app.main.image,				
-                      0 + app.main.spriteNumber * 32,1,32,31,		 					
-                      app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
-                      );	
-                  } else {
-                      ctx.drawImage(app.main.image,					 					
-                      0 + app.main.spriteNumber * 32,96,32,32,		 					
-                      app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
-                      );
-                  }
-              }
-              ctx.restore();
-
-              for (var i = 0; i < app.main.bullets.length; i++){
-                  app.main.bullets[i].draw(ctx);
-              }
-          };
-
-          var drawShadow = function(ctx){
-              ctx.save();
-              ctx.fillStyle = "black";
-              ctx.strokeStyle = "black";
-              ctx.globalAlpha = .7;
-              ctx.beginPath();
-              ctx.arc(app.main.x, app.main.y+ 12, app.main.radius*.9, 0, Math.PI*2, false);
-              ctx.fill();
-              ctx.closePath();
-              ctx.stroke();
-              ctx.restore();
-              for (var i = 0; i < app.main.bullets.length; i++){
-                  app.main.bullets[i].drawShadow(ctx);
-              }
-          }
-
-          var movePlayerX = function(dt){
-              app.main.x += app.main.speed * dt;
-          };
-
-          var movePlayerY = function(dt){
-              app.main.y += app.main.speed * dt;
-          };
-
-          var update = function(dt){
-              for (var i = 0; i < app.main.bullets.length; i++){
-                  app.main.bullets[i].move(dt);
-                  if(app.main.bullets[i].live == false) app.main.bullets.splice(i, 1);
-              }
-              if (app.main.x - app.main.radius < 0) app.main.x = app.main.radius;
-              if (app.main.x + app.main.radius > app.main.WIDTH) app.main.x = app.main.WIDTH - app.main.radius;
-              if (app.main.y - app.main.radius < 0) app.main.y = app.main.radius;
-              if (app.main.y + app.main.radius > app.main.HEIGHT) app.main.y = app.main.HEIGHT - app.main.radius;
-
-              if (app.main.gotHit){
-                  var d = new Date();
-                  if (d.getTime() - app.main.timeGotHit > 1000){
-                      app.main.gotHit = false;
-                  }
-              }
-
-              var d = new Date();
-              if (d.getTime() - app.main.timeLastSpriteChanged > 250){
-                  app.main.timeLastSpriteChanged = d.getTime();
-                  app.main.spriteNumber++;
-                  if (app.main.spriteNumber > 2){
-                      app.main.spriteNumber = 0;
-                  }
-              }
-          }
-
-          var p = {};
-          p.draw = drawPlayer;
-          p.speed = 150;
-          p.x = app.main.WIDTH/2;
-          p.y = app.main.HEIGHT/2;
-          p.moveX = movePlayerX;
-          p.moveY = movePlayerY;
-          p.health = 10;
-          p.maxHealth = 10; // only used for drawing purposes
-          p.attackPower = 1;
-          p.defense = 1;
-          p.radius = 18;
-          p.maxBullets = 10;
-          p.bullets = [];
-          p.makeBullet = makeBullet;
-          p.fireUp = fireU;
-          p.fireDown = fireD;
-          p.fireLeft = fireL;
-          p.fireRight = fireR;
-          p.update = update;
-          p.drawShadow = drawShadow;
-          p.gotHit = false;
-          p.timeGotHit = 0;
-          p.timeLastFired = 0;
-          p.fireRate = 500;
-          p.maxDistance = 600;
-
-          //Sprite resources
-          p.timeLastSpriteChanged = 0;
-          p.spriteNumber = 0;
-          p.direction = 0; // 0 = up, 1 = down, 2 = right, 3 = left
-
-          var image = new Image();
-          image.src = app.IMAGES['playerImage'];
-
-          p.image = image;
-
-          return p;
-      },
-
-      // - HOST ONLY -
-      makeEnemy: function(num){
-
-          var makeBullet = function(x,y,xSpeed, ySpeed){
-              var move = function(dt){
-                  app.main.x += app.main.xSpeed;
-                  app.main.y += app.main.ySpeed;
-                  app.main.traveled += Math.abs(app.main.ySpeed);
-                  app.main.traveled += Math.abs(app.main.xSpeed);
-
-                  if (app.main.maxDistance < app.main.traveled){
-                      app.main.live = false;
-                  }
-              };
-
-              var draw = function(ctx){
-                  ctx.save();
-                  ctx.fillStyle = app.main.fillStyle;
-                  ctx.strokeStyle = "black";
-                  ctx.beginPath();
-                  ctx.arc(app.main.x, app.main.y, app.main.radius, 0, Math.PI*2, false);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
-                  ctx.restore();
-              };
-
-              var drawShadow = function(ctx){
-                  ctx.save();
-                  ctx.fillStyle = "black";
-                  ctx.beginPath();
-                  ctx.globalAlpha = 0.5;
-                  ctx.arc(app.main.x, app.main.y + 20 - (20 * (app.main.traveled/app.main.maxDistance)), app.main.radius *.9, 0, Math.PI*2, false);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.restore();
-              }
-
-              var b = {};
-              if(app.main.eBullLethal == true){
-                  b.fillStyle = "red";
-              }else{
-                  b.fillStyle = "yellow";
-              }
-
-              b.maxDistance = 300;
-              b.traveled = 0;
-              b.power = 1;
-              b.x = app.main.x;
-              b.y = app.main.y;
-              b.radius = 5;
-              b.xSpeed = xSpeed;
-              b.ySpeed = ySpeed;
-              b.live = true
-              b.draw = draw;
-              b.drawShadow = drawShadow;
-              b.move = move;
-
-              return b;
-          };
-
-          var fireU = function(){
-              var d = new Date();
-              app.main.direction = 0;
-              if (app.main.bullets.length < e.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
-                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,0,-5));
-                  app.main.timeLastFired = d.getTime();
-              }
-          };
-          var fireD = function(){
-              var d = new Date();
-              app.main.direction = 1;
-              if (app.main.bullets.length < e.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
-                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,0,5));
-                  app.main.timeLastFired = d.getTime();
-              }
-          };
-          var fireL = function(){
-              var d = new Date();
-              app.main.direction = 3;
-              if (app.main.bullets.length < e.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
-                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,-5,0));
-                  app.main.timeLastFired = d.getTime();
-              }
-          };
-          var fireR = function(){
-              var d = new Date();
-              app.main.direction = 2;
-              if (app.main.bullets.length < e.maxBullets && d.getTime() - app.main.timeLastFired > app.main.fireRate){
-                  app.main.bullets.push(app.main.makeBullet(app.main.x,app.main.y,5,0));
-                  app.main.timeLastFired = d.getTime();
-              }
-          };
-
-          var enemyDraw = function(ctx){
-              ctx.save();
-              if(!app.main.image){
-                  ctx.fillStyle = "orange";
-                  ctx.fillRect(app.main.x, app.main.y, 32, 32);
-              } else {
-                  var halfW = app.main.radius;
-                  var halfH = app.main.radius;
-                  if( Math.abs(app.main.xSpeed) >= Math.abs(app.main.ySpeed)){
-                      if(app.main.xSpeed >= 0){
-                          app.main.fireDirection = 2;
-                          ctx.drawImage(app.main.image,				
-                          1 + app.main.spriteNumber * 32 + app.main.column * 96,65 + app.main.row * 128,31,31,		 					
-                          app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
-                          );
-                      } else {
-                          app.main.fireDirection = 3;
-                          ctx.drawImage(app.main.image,				
-                          1 + app.main.spriteNumber * 32 + app.main.column * 96,33 + app.main.row * 128,31,31,		 					
-                          app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
-                          );
-                      }
-                  } else {
-                      if(app.main.ySpeed >= 0){
-                          app.main.fireDirection = 1;
-                          ctx.drawImage(app.main.image,				
-                          1 + app.main.spriteNumber * 32 + app.main.column * 96,1 + app.main.row * 128,31,31,		 					
-                          app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
-                          );	
-                      } else {
-                          app.main.fireDirection = 0;
-                          ctx.drawImage(app.main.image,					 					
-                          1 + app.main.spriteNumber * 32 + app.main.column * 96,97 + app.main.row * 128,31,31,		 					
-                          app.main.x- halfW, app.main.y- halfH, halfW*2, halfH*2
-                          );
-                      }
-                  }
-              }
-
-              ctx.restore();
-              for (var i = 0; i < app.main.bullets.length; i++){
-                  app.main.bullets[i].draw(ctx);
-              }
-          };
-
-          var enemyDrawShadow = function(ctx){
-              ctx.save();
-              ctx.fillStyle = "black";
-              ctx.beginPath();
-              ctx.globalAlpha = .7;
-              ctx.arc(app.main.x, app.main.y + 12, app.main.radius*.9, 0, Math.PI*2, false);
-              ctx.fill();
-              ctx.closePath();
-              ctx.restore();
-              for (var i = 0; i < app.main.bullets.length; i++){
-                  app.main.bullets[i].drawShadow(ctx);
-              }
-          };
-
-          var enemyMove = function(dt){
-              for (var i = 0; i < app.main.bullets.length; i++){
-                  app.main.bullets[i].move(dt);
-                  if(app.main.bullets[i].live == false) app.main.bullets.splice(i, 1);
-              }
-
-              app.main.xSpeed = app.main.PLAYER.x - app.main.x;
-              app.main.ySpeed = app.main.PLAYER.y - app.main.y;
-
-              var mag = Math.sqrt(app.main.xSpeed*app.main.xSpeed + app.main.ySpeed*app.main.ySpeed);
-              app.main.xSpeed /= mag;
-              app.main.ySpeed /= mag;
-
-              app.main.x += app.main.xSpeed * app.main.speed * dt;
-              app.main.y += app.main.ySpeed * app.main.speed * dt;
-
-              //update walk cycle
-              var d = new Date();
-              if (d.getTime() - app.main.timeLastSpriteChanged > 10000/app.main.speed){
-                  app.main.timeLastSpriteChanged = d.getTime();
-                  app.main.spriteNumber++;
-                  if (app.main.spriteNumber > 2){
-                      app.main.spriteNumber = 0;
-                  }
-              }
-          }
-
-          var array = [];
-
-          var d = new Date();
-          var n = d.getTime();
-
-          for(var i = 0; i < num; i++){
-              var e = {};
-              var door = Math.floor(getRandom(0, 3));
-              //control spawn point
-              if(door == 0){
-                  e.x = 30;
-                  e.y = app.main.HEIGHT/2;
-              }
-              else if(door == 1){
-                  e.x = app.main.WIDTH/2;
-                  e.y = 30;
-              }
-              else{
-                  e.x = app.main.WIDTH - 30;
-                  e.y = app.main.HEIGHT/2;
-              }
-
-              e.startTime = n;
-
-              e.started = false;
-              e.alive = true;
-
-              //calculate direction to player
-              e.xSpeed = app.main.PLAYER.x - e.x;
-              e.ySpeed = app.main.PLAYER.y - e.y;
-              //normalize
-              var mag = Math.sqrt(e.xSpeed*e.xSpeed + e.ySpeed*e.ySpeed);
-              e.xSpeed /= mag;
-              e.ySpeed /= mag;
-
-              e.speed = Math.floor(getRandom(50, 150));
-
-              e.health = Math.floor(getRandom(1, 5));
-              e.attackPower = Math.floor(getRandom(1, 3));;
-              e.radius = app.main.ENEMY_RADIUS;
-
-              e.draw = enemyDraw;
-              e.drawShadow = enemyDrawShadow;
-              e.move = enemyMove;
-
-              e.maxBullets = 1;
-              e.bullets = [];
-              e.makeBullet = makeBullet;
-              e.fireUp = fireU;
-              e.fireDown = fireD;
-              e.fireLeft = fireL;
-              e.fireRight = fireR;
-              e.timeLastFired = 0;
-              e.fireRate = 2000;
-              e.fireDirection = 0;
-
-              e.timeLastSpriteChanged = 0;
-              e.spriteNumber = 0;
-
-
-              //IMAGES
-              var image = new Image();
-              var r = getRandom(0,1);
-              if (r <= .25){
-                  image.src = app.IMAGES['wolf'];
-                  e.row = 0;
-                  e.column = 0;
-              } else if (r > .25 & r <= .5){
-                  image.src = app.IMAGES['deer'];
-                  e.row = 0;
-                  e.column = 0;
-              } else if (r > .5 && r <= .75){
-                  image.src = app.IMAGES['bunny'];
-                  e.row = 0;
-                  e.column = 0;
-              } else {
-                  image.src = app.IMAGES['bear'];
-                  e.row = 0;
-                  e.column = 0;
-              }
-
-              e.image = image;
-
-              //Object.seal(e);
-              array.push(e);
-          }
-          return array;
-      },
+			
+			//IMAGES
+			var image = new Image();
+			var r = getRandom(0,1);
+			if (r <= .25){
+				image.src = app.IMAGES['wolf'];
+				e.row = 0;
+				e.column = 0;
+			} else if (r > .25 & r <= .5){
+				image.src = app.IMAGES['deer'];
+				e.row = 0;
+				e.column = 0;
+			} else if (r > .5 && r <= .75){
+				image.src = app.IMAGES['bunny'];
+				e.row = 0;
+				e.column = 0;
+			} else {
+				image.src = app.IMAGES['bear'];
+				e.row = 0;
+				e.column = 0;
+			}
+			
+			e.image = image;
+			
+			//Object.seal(e);
+			array.push(e);
+		}
+		return array;
+	},
 
       // - EVERYONE -
       // - TODO -
       // - Player needs to draw their own shadows
       drawShadows: function(ctx){
+      
           for(var p = 0; p < app.main.players.length; p++){
-              players[p].drawShadow(ctx);
+              app.main.players[p].drawShadow(ctx);
           }
           for(var i = 0; i < app.main.enemies.length; i++){
               var e = app.main.enemies[i];
@@ -1469,7 +1503,7 @@
           // + calls Date.valueOf(), which converts it from an object to a 	
           // primitive (number of milliseconds since January 1, 1970 local time)
           var now,fps;
-          now = (+new Date); 
+          now = new Date; 
           fps = 1000 / (now - app.main.lastTime);
           fps = clamp(fps, 12, 60);
           app.main.lastTime = now; 
@@ -1483,20 +1517,21 @@
           // - SEND GAME STATE CHANGE IF ROUND OVER TO PARTY -
 
           for (var p = 0; p < app.main.players.length; p++){
+            var player = app.main.players[p];
               for (var j = 0; j < app.main.enemies.length; j++){
                   if (app.main.enemies[j].alive == false) continue; // if enemy isn't alive disregard
                   if (app.main.enemies[j].started == false) continue; // if enemy isn't started disregard
-                  if (!app.main.player[p].gotHit && 
-                      Math.abs(app.main.player[p].x - app.main.enemies[j].x) < app.main.player[p].radius + app.main.enemies[j].radius &&
-                      Math.abs(app.main.player[p].y - app.main.enemies[j].y) < app.main.player[p].radius + app.main.enemies[j].radius){
-                          app.main.player[p].health -= app.main.enemies[j].attackPower; //decrement health
+                  if (!player.gotHit && 
+                      Math.abs(player.x - app.main.enemies[j].x) < player.radius + app.main.enemies[j].radius &&
+                      Math.abs(player.y - app.main.enemies[j].y) < player.radius + app.main.enemies[j].radius){
+                          player.health -= app.main.enemies[j].attackPower; //decrement health
                               if (app.main.enemies[j].health <= 0){
                                   app.main.enemies[j].alive = false;
                               }
                           }
                           //app.main.sound.playPlayerHurtEffect();
-                          if(app.main.player[p].health <= 0){ //make sure health can't go negative and sets round to over
-                              app.main.player[p].health = 0;
+                          if(player.health <= 0){ //make sure health can't go negative and sets round to over
+                              player.health = 0;
                               playersDead ++;
                               if(playersDead == app.main.players.length){
                                   app.main.roundScore = app.main.totalScore;
@@ -1504,18 +1539,18 @@
                               }
                           }
                           var d = new Date();
-                          app.main.player[p].timeGotHit = d.getTime();
-                          app.main.player[p].gotHit = true;
+                          player.timeGotHit = d.getTime();
+                          player.gotHit = true;
                       }
                   if(app.main.eBullActive == true){
                       for(var i = 0; i < app.main.enemies[j].bullets.length; i++){
                           var b = app.main.enemies[j].bullets[i];
-                          if (Math.abs(b.x - app.main.player[p].x) < b.radius + app.main.player[p].radius && Math.abs(b.y - app.main.player[p].y) < b.radius + app.main.player[p].radius){
+                          if (Math.abs(b.x - player.x) < b.radius + player.radius && Math.abs(b.y - player.y) < b.radius + player.radius){
                               b.live = false;
                               if(app.main.eBullLethal == true){
-                                  app.main.player[p].health -= 1;
-                                  if(app.main.player[p].health <= 0){ //make sure health can't go negative and sets round to over
-                                      app.main.player[p].health = 0;
+                                  player.health -= 1;
+                                  if(player.health <= 0){ //make sure health can't go negative and sets round to over
+                                      player.health = 0;
                                       playersDead ++;
                                       if(playersDead == app.main.players.length){
                                           app.main.roundScore = app.main.totalScore;
@@ -1523,15 +1558,16 @@
                                       }
                                   }
                                   var d = new Date();
-                                  app.main.player[p].timeGotHit = d.getTime();
-                                  app.main.player[p].gotHit = true;
+                                  player.timeGotHit = d.getTime();
+                                  player.gotHit = true;
                               }
                           }
                       }
                   }
-                  for (var i = 0; i < app.main.PLAYER.bullets.length; i++){
+                  for (var i = 0; i < player.bullets.length; i++){
+                    for (var j = 0; j <app.main.enemies.length; j++){
                       var e = app.main.enemies[j];
-                      var b = app.main.player[p].bullets[i];
+                      var b = player.bullets[i];
                       if (Math.abs(b.x - e.x) < b.radius + e.radius && Math.abs(b.y - e.y) < b.radius + e.radius){
                           e.health -= b.power;
                           //app.main.sound.playEnemyHurtEffect();
@@ -1545,12 +1581,13 @@
                               }
                           }
                       }
+                    }
                   }
 
                   //ITEMS
                   for (var i = 0; i < app.main.itemsOnGround.length; i++){
-                      if (Math.abs(app.main.player[p].x - app.main.itemsOnGround[i].x) < app.main.player[p].radius + app.main.itemsOnGround[i].radius &&
-                          Math.abs(app.main.player[p].y - app.main.itemsOnGround[i].y) < app.main.player[p].radius + app.main.itemsOnGround[i].radius){
+                      if (Math.abs(player.x - app.main.itemsOnGround[i].x) < player.radius + app.main.itemsOnGround[i].radius &&
+                          Math.abs(player.y - app.main.itemsOnGround[i].y) < player.radius + app.main.itemsOnGround[i].radius){
                           if(app.main.itemsOnGround[i].active != true && app.main.itemsOnGround[i].onGround == true){
                               app.main.itemsOnGround[i].onGround = false;
                               app.main.itemsOnGround[i].doEffect(app.main.PLAYER);
@@ -1596,8 +1633,7 @@
               var item = app.main.itemsOnGround[i];
               if(item.onGround == true){
                   ctx.save();
-                  ctx.drawImage(item.image,		 					
-                      item.x - item.radius/2, item.y - item.radius/2, item.radius, item.radius);	
+                  //ctx.drawImage(item.image, item.x - item.radius/2, item.y - item.radius/2, item.radius, item.radius);	
                   ctx.restore();
               }
           }
@@ -1671,6 +1707,10 @@
           app.main.sound = app.sound;
           app.main.Emitter = app.Emitter;
           app.main.init();
+          app.main.room = room;
+          if(host){
+            socket.emit('GetGameRoomInfo', room);
+          }
       });
 
       app.queue.loadManifest([

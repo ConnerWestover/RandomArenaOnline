@@ -72,10 +72,22 @@ const onSetupSockets = (sock) => {
     }
   });
 
+  // Menu use only
   socket.on('UpdateUsers', (data) => {
     roomNames[data.name].playersInLobby = data.players;
     socket.to(data.name).emit('UserUpdate', data.players);
     console.log(`Update Users in Room: ${data.name}`);
+  });
+
+  socket.on('HostUpdatesGameInfo', (data) => {
+    const info = {
+      players: data.players,
+      playerCount: data.playerCount,
+      enemies: data.enemies,
+      name: data.room,
+    };
+
+    socket.to(data.room).emit('PlayersReceiveGameInfo', info);
   });
 
   socket.on('KillRoomWithName', (name) => {
@@ -89,49 +101,21 @@ const onSetupSockets = (sock) => {
   socket.on('StartGame', (room) => {
     socket.to(room).emit('StartPlay', {});
   });
-	
-	socket.on('PassInformationToPlayers', (data) =>{
-		if(data != null){
-			socket.emit('InformationSentCheck', {
-				success: true,
-			});
-			socket.emit('RecieveInformation', {
-				players: data.players,
-				enemies: data.enemies, 
-				//probably needs more, address as we go
-			});
-		} else {
-			socket.emit('InformationSentCheck', {
-				success: false,
-				reason: 'DATA NOT FOUND',
-			})
-		}
-	});
-	
-	socket.on('RecieveInformationCheck', (data) =>{
-		if(data.success == false){
-			console.log(`${reason}`);
-		}
-	});
-	
-	socket.on('PassInputToHost', (data) =>{
-		if(data != null){
-			socket.emit('InputSentCheck', {
-				success: true,
-			});
-			socket.emit('RecieveInput', {
-				//stuff
-			});
-		} else {
-			socket.emit('InputSentCheck', {
-				success: false,
-				reason: 'DATA NOT FOUND',
-			});
-		}
-	});
+
+
+  socket.on('GetGameRoomInfo', (room) => {
+    console.log(`Room name = ${room}`);
+    const data = {
+      numPlayers: roomNames[room].playerCount,
+      playersFromLobby: roomNames[room].playersInLobby,
+      name: room,
+    };
+
+    socket.emit('ReceiveGameRoomInfo', data);
+  });
 };
+
 
 io.sockets.on('connection', (socket) => {
   onSetupSockets(socket);
 });
-
