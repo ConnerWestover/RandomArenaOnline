@@ -732,7 +732,7 @@
 
           window.setInterval(() => {
             app.main.update()
-          }, 17);
+          }, 1000/60);
           
         });
         
@@ -745,7 +745,7 @@
           
           window.setInterval(() => {
             app.main.update()
-          }, 17);
+          }, 1000/60);
         });
         
         socket.on('HostReceivesUserInput', (data)=>{
@@ -754,16 +754,16 @@
           var dt = app.main.calculateDeltaTime();
           
           if(data.posX){
-            app.main.players[data.playerIndex].moveX(-dt);
+            app.main.players[data.playerIndex].moveX(-1/60);
           }
           if(data.posY){
-            app.main.players[data.playerIndex].moveY(-dt);
+            app.main.players[data.playerIndex].moveY(-1/60);
           }
           if(data.negX){
-            app.main.players[data.playerIndex].moveX(dt);
+            app.main.players[data.playerIndex].moveX(1/60);
           }
           if(data.negY){
-            app.main.players[data.playerIndex].moveY(dt);
+            app.main.players[data.playerIndex].moveY(1/60);
           }
           if(data.firePosX){
             app.main.players[data.playerIndex].fireRight();
