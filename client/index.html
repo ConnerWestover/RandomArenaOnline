@@ -18,7 +18,7 @@
     }
   </style>
   
-  <script src="http://code.createjs.com/preloadjs-0.4.1.min.js"></script>
+  <!--<script src="http://code.createjs.com/preloadjs-0.4.1.min.js"></script>-->
   <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
   <script src ="/socket.io/socket.io.js"></script>
 	
@@ -1743,38 +1743,34 @@
   const GameStart = () =>{
       console.log("window.onload called");
 
-      app.queue = new createjs.LoadQueue(false);
-      app.queue.installPlugin(createjs.Sound);
-      app.queue.on("complete", function(){
-          console.log("images loaded called");
-          app.sound.init();
-          app.main.socket = socket;
-          app.main.sound = app.sound;
-          app.main.Emitter = app.Emitter;
-          app.main.init();
-          app.main.room = room;
-          if(playersInLobby[1] != undefined){
-            if(playersInLobby[1].username == username){
-              app.main.playerIndex = 1;
-            }
+      console.log("images loaded called");
+      app.sound.init();
+      app.main.socket = socket;
+      app.main.sound = app.sound;
+      app.main.Emitter = app.Emitter;
+      app.main.init();
+      app.main.room = room;
+      if(playersInLobby[1] != undefined){
+        if(playersInLobby[1].username == username){
+          app.main.playerIndex = 1;
+        }
+      }
+      if(playersInLobby[2] != undefined){
+          if(playersInLobby[2].username == username){
+            app.main.playerIndex = 2;
           }
-          if(playersInLobby[2] != undefined){
-              if(playersInLobby[2].username == username){
-                app.main.playerIndex = 2;
-              }
+      }
+      if(playersInLobby[3] != undefined){
+          if(playersInLobby[3].username == username){
+            app.main.playerIndex = 3;
           }
-          if(playersInLobby[3] != undefined){
-              if(playersInLobby[3].username == username){
-                app.main.playerIndex = 3;
-              }
-          }
-          if(host){
-            app.main.index = 0;
-            socket.emit('GetGameRoomInfo', room);
-          }
-      });
+      }
+      if(host){
+        app.main.index = 0;
+        socket.emit('GetGameRoomInfo', room);
+      }
 
-      app.queue.loadManifest([
+     /*app.queue.loadManifest([
        {id: "enemyImage", src:"media/zombiesheet.png"},
        {id: "deer", src:"media/deer.png"},
        {id: "bear", src:"media/bear.png"},
@@ -1786,7 +1782,7 @@
        {id: "flower2", src:"media/flower2.png"},
        {id: "plant", src:"media/plant3.png"},
        {id: "ground", src:"media/grass.png"},
-      ]);
+      ]);*/
   };
   </script>
   
