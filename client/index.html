@@ -1006,9 +1006,9 @@
         for (var p = 0; p < app.main.players.length; p++){
           ctx.save();
           var player = app.main.players[p];
-              if(!this.image){
+              if(this.image != undefined){
                   ctx.fillStyle = "orange";
-                  ctx.fillRect(player.x, player.y, 32, 32);
+                  ctx.fillRect(player.x - 16, player.y - 16, 32, 32);
               } else {
                   var halfW = player.radius;
                   var halfH = player.radius;
@@ -1281,8 +1281,6 @@
 			b.xSpeed = xSpeed;
 			b.ySpeed = ySpeed;
 			b.live = true
-			b.draw = draw;
-			b.drawShadow = drawShadow;
 			b.move = move;
 			
 			return b;
@@ -1586,7 +1584,6 @@
                           var d = new Date();
                           player.timeGotHit = d.getTime();
                           player.gotHit = true;
-                      }
                   if(app.main.eBullActive == true){
                       for(var i = 0; i < app.main.enemies[j].bullets.length; i++){
                           var b = app.main.enemies[j].bullets[i];
@@ -1609,6 +1606,7 @@
                           }
                       }
                   }
+              }
                   for (var i = 0; i < player.bullets.length; i++){
                     for (var j = 0; j <app.main.enemies.length; j++){
                       var e = app.main.enemies[j];
