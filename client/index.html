@@ -645,6 +645,7 @@
       playerOnFire: false,
 
       amHost: false,
+      playerIndex: 0,
       numPlayers: 1,
       players: [],
       playersDead: 0,
@@ -715,11 +716,12 @@
         socket.on('ReceiveGameRoomInfo', (data) =>{
           
           app.main.numPlayers = data.numPlayers;
-
+          
           //Use data.playersFromLobby to create classes
           
           app.main.amHost = true;
           app.main.room = data.room;
+          app.main.playerIndex = 0;
           
           for(var i = 0; i < app.main.numPlayers; i++){
               app.main.players[i] = app.main.makePlayer();
@@ -740,10 +742,43 @@
           app.main.enemies = data.enemies;
           app.main.room = data.name;
           
+          
           window.setInterval(() => {
             app.main.update()
           }, 17);
         });
+        
+        socket.on('HostReceivesUserInput', (data)=>{
+          if(!app.main.amHost){ return;}
+          
+          var dt = app.main.calculateDeltaTime();
+          
+          if(data.posX){
+            app.main.players[data.playerIndex].moveX(-dt);
+          }
+          if(data.posY){
+            app.main.players[data.playerIndex].moveY(-dt);
+          }
+          if(data.negX){
+            app.main.players[data.playerIndex].moveX(dt);
+          }
+          if(data.negY){
+            app.main.players[data.playerIndex].moveY(dt);
+          }
+          if(data.firePosX){
+            app.main.players[data.playerIndex].fireRight();
+          }
+          if(data.firePosY){
+            app.main.players[data.playerIndex].fireUp();
+          }
+          if(data.fireNegX){
+            app.main.players[data.playerIndex].fireLeft();
+          }
+          if(data.fireNegY){
+            app.main.players[data.playerIndex].fireDown();
+          }
+        });
+        
       },
 
       // - HOST ONLY -
@@ -761,10 +796,6 @@
 
           app.main.ctx.clearRect(0,0,app.main.WIDTH, app.main.HEIGHT);
 
-          // 2) PAUSED?
-          // if so, bail out of loop
-
-          // 3) HOW MUCH TIME HAS GONE BY?
           var dt = app.main.calculateDeltaTime();
 
           // i) draw background	
@@ -773,20 +804,17 @@
           }
 
           //app.main.drawMain(app.main.ctx);
-
           //GamePlay Drawing Happens
           if (app.main.gameState == app.main.GAME_STATE.DEFAULT || app.main.gameState == app.main.GAME_STATE.ROUND_OVER){
               if(app.main.amHost == true){
                   app.main.moveEnemy(dt);
                   app.main.checkForCollisions();
-              }
+              
 
-              //powers check
-              if(app.main.eBullActive == true){
+                //update everyone
+                if(app.main.eBullActive == true){
                   app.main.enemyShoot();
-              }
-              //update everyone
-              if(app.main.amHost){
+                }
                 if(myKeys.keydown[myKeys.KEYBOARD.KEY_W]){
                     app.main.players[0].moveY(-dt);
                 }	
@@ -811,28 +839,72 @@
                 if (myKeys.keydown[myKeys.KEYBOARD.KEY_RIGHT]){
                     app.main.players[0].fireRight();
                 }
-              
-                // - SERVER HERE -
-                // - UPDATE OTHER PLAYER POSITIONS/STATUS IF HOST -
-                // - SEND ENEMY POSITIONS IF HOST -
-                // - SEND PLAYER POSITION/STATUS IF PARTY -
 
                 for (var p = 0; p < app.main.players.length; p++){
                   app.main.players[p].update(dt);
                 }
+              } else {
+                var data = {
+                  posX: false,
+                  posY: false,
+                  negX: false,
+                  negY: false,
+                  firePosX: false,
+                  firePosY: false,
+                  fireNegX: false,
+                  fireNegY: false,
+                  room: room,
+                  sendMe: false,
+                  playerIndex: app.main.playerIndex,
+                };
+                if(myKeys.keydown[myKeys.KEYBOARD.KEY_W]){
+                    data.posY = true;
+                    data.sendMe = true;
+                }	
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_S]){
+                    data.negY = true;
+                    data.sendMe = true;
+                } 
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_A]){
+                    data.posX = true;
+                    data.sendMe = true;
+                } 
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_D]){
+                    data.negX = true;
+                    data.sendMe = true;
+                } 
+                if(myKeys.keydown[myKeys.KEYBOARD.KEY_UP]){
+                    data.firePosY = true;
+                    data.sendMe = true;
+                }	
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_DOWN]){
+                    data.fireNegY = true;
+                    data.sendMe = true;
+                } 
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_LEFT]){
+                    data.fireNegX = true;
+                    data.sendMe = true;
+                } 
+                if (myKeys.keydown[myKeys.KEYBOARD.KEY_RIGHT]){
+                    data.firePosX = true;
+                    data.sendMe = true;
+                }
+                
+                if(data.sendMe){
+                  socket.emit('UserSendsInputToHost', data);
+                }
+
               }
 
               if(app.main.gameState != app.main.GAME_STATE.ROUND_OVER){
                   app.main.drawOnGroundItems(app.main.ctx);
               }
+              app.main.drawPlayers(app.main.ctx);
               //draw things
               if (app.main.gameState == app.main.GAME_STATE.DEFAULT){
-                  //app.main.drawShadows(app.main.ctx);
+                  app.main.drawShadows(app.main.ctx);
                   app.main.drawEnemy(app.main.ctx);
               }
-              for (var p = 0; p < app.main.players.length; p++){
-                app.main.players[p].draw(app.main.ctx);
-              };
               //draw hud
               app.main.drawItemText(app.main.ctx);
               app.main.drawHUD(app.main.ctx);
@@ -929,6 +1001,107 @@
 
           ctx.restore(); // NEW
       },
+    
+      drawPlayers: function(ctx){
+        for (var p = 0; p < app.main.players.length; p++){
+          ctx.save();
+          var player = app.main.players[p];
+              if(true){ // !this.image
+                  ctx.fillStyle = "orange";
+                  ctx.fillRect(player.x, player.y, 32, 32);
+              } else {
+                  var halfW = player.radius;
+                  var halfH = player.radius;
+                  if(this.direction == 2){
+                      ctx.drawImage(player.image,				
+                      0 + player.spriteNumber * 32,64,32,32,		 					
+                      player.x- halfW, player.y- halfH, halfW*2, halfH*2
+                      );
+                  } else if (player.direction == 3) {
+                      ctx.drawImage(player.image,				
+                      0 + player.spriteNumber * 32,32,32,32,		 					
+                      player.x- halfW, player.y- halfH, halfW*2, halfH*2
+                      );
+                  } else if(player.direction == 1){
+                      ctx.drawImage(player.image,				
+                      0 + player.spriteNumber * 32,1,32,31,		 					
+                      player.x- halfW, player.y- halfH, halfW*2, halfH*2
+                      );	
+                  } else {
+                      ctx.drawImage(player.image,					 					
+                      0 + player.spriteNumber * 32,96,32,32,		 					
+                      player.x- halfW, player.y- halfH, halfW*2, halfH*2
+                      );
+                  }
+              }
+              ctx.restore();
+
+              for (var i = 0; i < player.bullets.length; i++){
+                var bullet = player.bullets[i];
+                ctx.save();
+				ctx.fillStyle = "red";
+				ctx.strokeStyle = "black";
+				ctx.beginPath();
+				ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI*2, false);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+				ctx.restore();
+              }
+        }
+      },
+    
+      drawShadows: function(ctx){
+      
+          for(var p = 0; p < app.main.players.length; p++){
+              var player = app.main.players[p];
+              ctx.save();
+              ctx.fillStyle = "black";
+              ctx.strokeStyle = "black";
+              ctx.globalAlpha = .7;
+              ctx.beginPath();
+              ctx.arc(player.x, player.y+ 12, player.radius*.9, 0, Math.PI*2, false);
+              ctx.fill();
+              ctx.closePath();
+              ctx.stroke();
+              ctx.restore();
+              for (var i = 0; i < player.bullets.length; i++){
+                var bullet = player.bullets[i];
+                ctx.save();
+				ctx.fillStyle = "black";
+				ctx.beginPath();
+				ctx.globalAlpha = 0.5;
+				ctx.arc(bullet.x, bullet.y + 20 - (20 * (bullet.traveled/bullet.maxDistance)), bullet.radius *.9, 0, Math.PI*2, false);
+				ctx.closePath();
+				ctx.fill();
+				ctx.restore();
+              }
+          }
+          for(var i = 0; i < app.main.enemies.length; i++){
+              var e = app.main.enemies[i];
+              if(e.started == true && e.alive == true){
+                  ctx.save();
+                  ctx.fillStyle = "black";
+                  ctx.beginPath();
+                  ctx.globalAlpha = .7;
+                  ctx.arc(e.x, e.y + 12, e.radius*.9, 0, Math.PI*2, false);
+                  ctx.fill();
+                  ctx.closePath();
+                  ctx.restore();
+                  for (var j = 0; j < e.bullets.length; j++){
+                    var b = e.bullets[j];
+                    ctx.save();
+                    ctx.fillStyle = "black";
+                    ctx.beginPath();
+                    ctx.globalAlpha = 0.5;
+                    ctx.arc(b.x, b.y + 20 - (20 * (b.traveled/b.maxDistance)), b.radius *.9, 0, Math.PI*2, false);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                  }
+              }
+          }
+      },
 
       // - HOST ONLY -
       makePlayer: function(){
@@ -944,29 +1117,6 @@
 				}
 			};
 			
-			var draw = function(ctx){
-				ctx.save();
-				ctx.fillStyle = "red";
-				ctx.strokeStyle = "black";
-				ctx.beginPath();
-				ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2, false);
-				ctx.closePath();
-				ctx.fill();
-				ctx.stroke();
-				ctx.restore();
-			};
-			
-			var drawShadow = function(ctx){
-				ctx.save();
-				ctx.fillStyle = "black";
-				ctx.beginPath();
-				ctx.globalAlpha = 0.5;
-				ctx.arc(this.x, this.y + 20 - (20 * (this.traveled/this.maxDistance)), this.radius *.9, 0, Math.PI*2, false);
-				ctx.closePath();
-				ctx.fill();
-				ctx.restore();
-			}
-			
 			var b = {};
 			b.maxDistance = maxDistance;
 			b.traveled = 0;
@@ -977,8 +1127,6 @@
 			b.xSpeed = xSpeed;
 			b.ySpeed = ySpeed;
 			b.live = true
-			b.draw = draw;
-			b.drawShadow = drawShadow;
 			b.move = move;
 			
 			return b;
@@ -1016,59 +1164,6 @@
 				this.timeLastFired = d.getTime();
 			}
 		};
-		var drawPlayer = function(ctx){
-			ctx.save();
-			
-			if(true){ // !this.image
-				ctx.fillStyle = "orange";
-				ctx.fillRect(this.x, this.y, 32, 32);
-			} else {
-				var halfW = this.radius;
-				var halfH = this.radius;
-				if(this.direction == 2){
-					ctx.drawImage(this.image,				
-					0 + this.spriteNumber * 32,64,32,32,		 					
-					this.x- halfW, this.y- halfH, halfW*2, halfH*2
-					);
-				} else if (this.direction == 3) {
-					ctx.drawImage(this.image,				
-					0 + this.spriteNumber * 32,32,32,32,		 					
-					this.x- halfW, this.y- halfH, halfW*2, halfH*2
-					);
-				} else if(this.direction == 1){
-					ctx.drawImage(this.image,				
-					0 + this.spriteNumber * 32,1,32,31,		 					
-					this.x- halfW, this.y- halfH, halfW*2, halfH*2
-					);	
-				} else {
-					ctx.drawImage(this.image,					 					
-					0 + this.spriteNumber * 32,96,32,32,		 					
-					this.x- halfW, this.y- halfH, halfW*2, halfH*2
-					);
-				}
-			}
-			ctx.restore();
-			
-			for (var i = 0; i < this.bullets.length; i++){
-				this.bullets[i].draw(ctx);
-			}
-		};
-		
-		var drawShadow = function(ctx){
-			ctx.save();
-			ctx.fillStyle = "black";
-			ctx.strokeStyle = "black";
-			ctx.globalAlpha = .7;
-			ctx.beginPath();
-			ctx.arc(this.x, this.y+ 12, this.radius*.9, 0, Math.PI*2, false);
-			ctx.fill();
-			ctx.closePath();
-			ctx.stroke();
-			ctx.restore();
-			for (var i = 0; i < this.bullets.length; i++){
-				this.bullets[i].drawShadow(ctx);
-			}
-		}
 		
 		var movePlayerX = function(dt){
 			this.x += this.speed * dt;
@@ -1117,7 +1212,6 @@
 		}
 		
 		var p = {};
-		p.draw = drawPlayer;
 		p.speed = 150;
 		p.x = this.WIDTH/2;
 		p.y = this.HEIGHT/2;
@@ -1137,7 +1231,6 @@
 		p.fireLeft = fireL;
 		p.fireRight = fireR;
 		p.update = update;
-		p.drawShadow = drawShadow;
 		p.gotHit = false;
 		p.timeGotHit = 0;
 		p.timeLastFired = 0;
@@ -1171,28 +1264,6 @@
 				}
 			};
 			
-			var draw = function(ctx){
-				ctx.save();
-				ctx.fillStyle = this.fillStyle;
-				ctx.strokeStyle = "black";
-				ctx.beginPath();
-				ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2, false);
-				ctx.closePath();
-				ctx.fill();
-				ctx.stroke();
-				ctx.restore();
-			};
-			
-			var drawShadow = function(ctx){
-				ctx.save();
-				ctx.fillStyle = "black";
-				ctx.beginPath();
-				ctx.globalAlpha = 0.5;
-				ctx.arc(this.x, this.y + 20 - (20 * (this.traveled/this.maxDistance)), this.radius *.9, 0, Math.PI*2, false);
-				ctx.closePath();
-				ctx.fill();
-				ctx.restore();
-			}
 			
 			var b = {};
 			if(app.main.eBullLethal == true){
@@ -1250,65 +1321,6 @@
 			}
 		};
 		
-		var enemyDraw = function(ctx){
-			ctx.save();
-			if(true){ // !this.image
-				ctx.fillStyle = "orange";
-				ctx.fillRect(this.x, this.y, 32, 32);
-			} else {
-				var halfW = this.radius;
-				var halfH = this.radius;
-				if( Math.abs(this.xSpeed) >= Math.abs(this.ySpeed)){
-					if(this.xSpeed >= 0){
-						this.fireDirection = 2;
-						ctx.drawImage(this.image,				
-						1 + this.spriteNumber * 32 + this.column * 96,65 + this.row * 128,31,31,		 					
-						this.x- halfW, this.y- halfH, halfW*2, halfH*2
-						);
-					} else {
-						this.fireDirection = 3;
-						ctx.drawImage(this.image,				
-						1 + this.spriteNumber * 32 + this.column * 96,33 + this.row * 128,31,31,		 					
-						this.x- halfW, this.y- halfH, halfW*2, halfH*2
-						);
-					}
-				} else {
-					if(this.ySpeed >= 0){
-						this.fireDirection = 1;
-						ctx.drawImage(this.image,				
-						1 + this.spriteNumber * 32 + this.column * 96,1 + this.row * 128,31,31,		 					
-						this.x- halfW, this.y- halfH, halfW*2, halfH*2
-						);	
-					} else {
-						this.fireDirection = 0;
-						ctx.drawImage(this.image,					 					
-						1 + this.spriteNumber * 32 + this.column * 96,97 + this.row * 128,31,31,		 					
-						this.x- halfW, this.y- halfH, halfW*2, halfH*2
-						);
-					}
-				}
-			}
-			
-			ctx.restore();
-			for (var i = 0; i < this.bullets.length; i++){
-				this.bullets[i].draw(ctx);
-			}
-		};
-		
-		var enemyDrawShadow = function(ctx){
-			ctx.save();
-			ctx.fillStyle = "black";
-			ctx.beginPath();
-			ctx.globalAlpha = .7;
-			ctx.arc(this.x, this.y + 12, this.radius*.9, 0, Math.PI*2, false);
-			ctx.fill();
-			ctx.closePath();
-			ctx.restore();
-			for (var i = 0; i < this.bullets.length; i++){
-				this.bullets[i].drawShadow(ctx);
-			}
-		};
-		
 		var enemyMove = function(dt){
 			for (var i = 0; i < this.bullets.length; i++){
 				this.bullets[i].move(dt);
@@ -1334,7 +1346,7 @@
 					this.spriteNumber = 0;
 				}
 			}
-		}
+		};
 		
 		var array = [];
 		
@@ -1377,8 +1389,6 @@
 			e.attackPower = Math.floor(getRandom(1, 3));;
 			e.radius = this.ENEMY_RADIUS;
 			
-			e.draw = enemyDraw;
-			e.drawShadow = enemyDrawShadow;
 			e.move = enemyMove;
 			
 			e.maxBullets = 1;
@@ -1425,21 +1435,6 @@
 		return array;
 	},
 
-      // - EVERYONE -
-      // - TODO -
-      // - Player needs to draw their own shadows
-      drawShadows: function(ctx){
-      
-          for(var p = 0; p < app.main.players.length; p++){
-              app.main.players[p].drawShadow(ctx);
-          }
-          for(var i = 0; i < app.main.enemies.length; i++){
-              var e = app.main.enemies[i];
-              if(e.started == true && e.alive == true){
-                  e.drawShadow(ctx);
-              }
-          }
-      },
 
       // - EVERYONE -
       drawEnemy: function(ctx){
@@ -1456,7 +1451,57 @@
               }
 
               if(e.started == true && e.alive == true){
-                  e.draw(ctx);
+                  ctx.save();
+                  if(true){ // !this.image
+                      ctx.fillStyle = "orange";
+                      ctx.fillRect(e.x, e.y, 32, 32);
+                  } else {
+                      var halfW = e.radius;
+                      var halfH = e.radius;
+                      if( Math.abs(e.xSpeed) >= Math.abs(e.ySpeed)){
+                          if(e.xSpeed >= 0){
+                              e.fireDirection = 2;
+                              ctx.drawImage(this.image,				
+                              1 + e.spriteNumber * 32 + e.column * 96,65 + e.row * 128,31,31,		 					
+                              e.x- halfW, e.y- halfH, halfW*2, halfH*2
+                              );
+                          } else {
+                              e.fireDirection = 3;
+                              ctx.drawImage(e.image,				
+                              1 + e.spriteNumber * 32 + e.column * 96,33 + e.row * 128,31,31,		 					
+                              e.x- halfW, e.y- halfH, halfW*2, halfH*2
+                              );
+                          }
+                      } else {
+                          if(e.ySpeed >= 0){
+                              e.fireDirection = 1;
+                              ctx.drawImage(e.image,				
+                              1 + e.spriteNumber * 32 + e.column * 96,1 + e.row * 128,31,31,		 					
+                              e.x- halfW, e.y- halfH, halfW*2, halfH*2
+                              );	
+                          } else {
+                              e.fireDirection = 0;
+                              ctx.drawImage(e.image,					 					
+                              1 + e.spriteNumber * 32 + e.column * 96,97 + e.row * 128,31,31,		 					
+                              e.x- halfW, e.y- halfH, halfW*2, halfH*2
+                              );
+                          }
+                      }
+                  }
+
+                  ctx.restore();
+                  for (var j = 0; j < e.bullets.length; j++){
+                      var b = e.bullets[j];
+                      ctx.save();
+                      ctx.fillStyle = b.fillStyle;
+                      ctx.strokeStyle = "black";
+                      ctx.beginPath();
+                      ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2, false);
+                      ctx.closePath();
+                      ctx.fill();
+                      ctx.stroke();
+                      ctx.restore();
+                  }
               }
           }
       },
@@ -1708,7 +1753,23 @@
           app.main.Emitter = app.Emitter;
           app.main.init();
           app.main.room = room;
+          if(playersInLobby[1] != undefined){
+            if(playersInLobby[1].username == username){
+              app.main.playerIndex = 1;
+            }
+          }
+          if(playersInLobby[2] != undefined){
+              if(playersInLobby[2].username == username){
+                app.main.playerIndex = 2;
+              }
+          }
+          if(playersInLobby[3] != undefined){
+              if(playersInLobby[3].username == username){
+                app.main.playerIndex = 3;
+              }
+          }
           if(host){
+            app.main.index = 0;
             socket.emit('GetGameRoomInfo', room);
           }
       });
@@ -1724,7 +1785,7 @@
        {id: "flower1", src:"media/flower1.png"},
        {id: "flower2", src:"media/flower2.png"},
        {id: "plant", src:"media/plant3.png"},
-       {id: "ground", src:"media/grass.png"}
+       {id: "ground", src:"media/grass.png"},
       ]);
   };
   </script>
