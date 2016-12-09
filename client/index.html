@@ -754,16 +754,16 @@
           var dt = app.main.calculateDeltaTime();
           
           if(data.posX){
-            app.main.players[data.playerIndex].moveX(-1/60);
+            app.main.players[data.playerIndex].moveX(-dt);
           }
           if(data.posY){
-            app.main.players[data.playerIndex].moveY(-1/60);
+            app.main.players[data.playerIndex].moveY(-dt);
           }
           if(data.negX){
-            app.main.players[data.playerIndex].moveX(1/60);
+            app.main.players[data.playerIndex].moveX(dt);
           }
           if(data.negY){
-            app.main.players[data.playerIndex].moveY(1/60);
+            app.main.players[data.playerIndex].moveY(dt);
           }
           if(data.firePosX){
             app.main.players[data.playerIndex].fireRight();
@@ -1006,7 +1006,7 @@
         for (var p = 0; p < app.main.players.length; p++){
           ctx.save();
           var player = app.main.players[p];
-              if(true){ // !this.image
+              if(!this.image){
                   ctx.fillStyle = "orange";
                   ctx.fillRect(player.x, player.y, 32, 32);
               } else {
@@ -1452,7 +1452,7 @@
 
               if(e.started == true && e.alive == true){
                   ctx.save();
-                  if(true){ // !this.image
+                  if(!this.image) {
                       ctx.fillStyle = "orange";
                       ctx.fillRect(e.x, e.y, 32, 32);
                   } else {
@@ -1550,7 +1550,7 @@
           var now,fps;
           now = new Date; 
           fps = 1000 / (now - app.main.lastTime);
-          fps = clamp(fps, 12, 60);
+          fps = clamp(fps, 12, 120);
           app.main.lastTime = now; 
           return 1/fps;
       },

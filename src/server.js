@@ -114,10 +114,9 @@ const onSetupSockets = (sock) => {
     socket.emit('ReceiveGameRoomInfo', data);
   });
 
-socket.on('UserSendsInputToHost', (data) => {
-  socket.to(data.room).emit('HostReceivesUserInput', data);
-});
-  
+  socket.on('UserSendsInputToHost', (data) => {
+    socket.to(data.room).emit('HostReceivesUserInput', data);
+  });
 };
 
 
