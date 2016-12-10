@@ -22,22 +22,19 @@ const roomNames = {};
 const onSetupSockets = (sock) => {
   const socket = sock;
   socket.on('CreateRoomWithName', (data) => {
-    console.log(`Attempt To Room Created With Name: ${data.name}`);
     if (roomNames[data.name] !== undefined) {
       socket.emit('ReceiveHostRoomCheck', {
         success: false,
       });
-      console.log(`Failed To Create Room With Name: ${data.name}`);
     } else {
-      var lobby = [];
-      lobby[0] = (data.user)
+      const lobby = [];
+      lobby[0] = (data.user);
       roomNames[data.name] = {
         name: data.name,
         playerCount: 1,
         host: data.user,
         playersInLobby: lobby,
       };
-      console.log(`Created Room With Name: ${data.name}`);
       roomNames[data.name].playersInLobby[0] = data.userAgent;
       socket.join(data.name);
       socket.emit('ReceiveHostRoomCheck', {
@@ -47,13 +44,11 @@ const onSetupSockets = (sock) => {
   });
 
   socket.on('FindRoomWithName', (data) => {
-    console.log(`Find Room With Name: ${data.name}`);
     if (roomNames[data.name] === undefined) {
       socket.emit('ReceiveFindRoomCheck', {
         success: false,
         reason: 'THAT ROOM DOES NOT EXIST',
       });
-      console.log(`Failed With Name: ${data.name}`);
     } else if (roomNames[data.name].playerCount < 4) {
       socket.join(data.name);
       roomNames[data.name].playersInLobby[roomNames[data.name].playerCount] = data.user;
@@ -64,8 +59,7 @@ const onSetupSockets = (sock) => {
         host: roomNames[data.name].host,
         room: data.name,
       });
-      roomNames[data.name].playerCount += 1;  
-      console.log(`Found Room: ${data.name}`);
+      roomNames[data.name].playerCount += 1;
       socket.to(data.name).emit('NewRoomMember', roomNames[data.name].playersInLobby);
     } else {
       socket.emit('ReceiveFindRoomCheck', {
@@ -74,14 +68,12 @@ const onSetupSockets = (sock) => {
       });
     }
   });
-  
+
   socket.on('FindAnOpenRoom', (data) => {
-   for (name in roomNames){
-      console.log(`Checking Room ${name}`);
-      if(roomNames[name].playerCount < 4){
-         socket.join(name);
+    for (name in roomNames) {
+      if (roomNames[name].playerCount < 4) {
+        socket.join(name);
         roomNames[name].playersInLobby[roomNames[name].playerCount] = data.user;
-        console.log(`Joining Room : ${roomNames[name].name}`);
         socket.emit('ReceiveFindRoomCheck', {
           success: true,
           index: roomNames[name].playerCount,
@@ -99,15 +91,14 @@ const onSetupSockets = (sock) => {
   socket.on('UpdateUsers', (data) => {
     roomNames[data.name].playersInLobby = data.players;
     socket.to(data.name).emit('UserUpdate', data.players);
-    console.log(`Update Users in Room: ${data.name}`);
   });
-  
+
   socket.on('LeaveRoom', (data) => {
-    var room = roomNames[data.name];
-    var playersInLobby = room.playersInLobby;
-    var index = data.user.index;
+    const room = roomNames[data.name];
+    const playersInLobby = room.playersInLobby;
+    const index = data.user.index;
     playersInLobby[index] = undefined;
-    for (var i = index; i < playersInLobby.length - 1; i++){
+    for (let i = index; i < playersInLobby.length - 1; i += 1) {
       playersInLobby[i] = playersInLobby[i + 1];
       playersInLobby[i].index = i;
       playersInLobby[i + 1] = undefined;
@@ -122,8 +113,7 @@ const onSetupSockets = (sock) => {
   });
 
   socket.on('KillRoomWithName', (name) => {
-    console.log(`Kill Room: ${name}`);
-    roomNames[name] =undefined;
+    roomNames[name] = undefined;
     socket.leave(name);
   });
 

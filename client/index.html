@@ -162,7 +162,6 @@
       
       socket.on('StartPlay', (data)=>{
         state = MenuState.PLAYING;
-        console.log("Start Play");
         GameStart();
       });
     };
@@ -529,7 +528,6 @@
           //(HEIGHT*((2 * i) + 1)/10+HEIGHT*5/40) - 20
           if(mouse.y > HEIGHT*((2 * index) + 1)/10 + HEIGHT*5/40 - 20 && mouse.y < HEIGHT*((2 * index) + 1)/10 + HEIGHT*9/40 - 20){
             if(mouse.x > WIDTH*11/16 && mouse.x < WIDTH*12/16){
-              console.log('valid S');
               startingClass = 1;
               ready = true;
               playersInLobby[index] = {
@@ -773,7 +771,6 @@
 
       // methods
       init : () => {
-          console.log("app.main.init() called");
           // initialize properties
           app.sound.playBGAudio();
           app.main.IMAGES.player.src = app.main.IMAGESRCS.player;
@@ -1243,7 +1240,6 @@
 
       // - HOST ONLY -
     makePlayer: function(startingClass, name){
-    console.log(name);
 		var makeBullet = function(x,y,xSpeed, ySpeed, maxDistance){
 			var move = function(dt){
 				this.x += this.xSpeed;
@@ -1703,7 +1699,7 @@
                   if(e.imageNumber == 2) { EnemyImage = app.main.IMAGES.wolf; }
                   if(e.imageNumber == 3) { EnemyImage = app.main.IMAGES.deer; }
                   if(e.imageNumber == 4) { EnemyImage = app.main.IMAGES.bunny;}
-                  if(e.imageNumber == 13) { EnemyImage = app.main.IMAGES.bat; console.log("bat");}
+                  if(e.imageNumber == 13) { EnemyImage = app.main.IMAGES.bat;}
                 
                   if (e.imageNumber >= 5 && e.imageNumber <= 8) {
                     var halfW = e.radius;
@@ -1886,7 +1882,7 @@
                     if(e.alive) {
                       if (Math.abs(b.x - e.x) < b.radius + e.radius && Math.abs(b.y - e.y) < b.radius +     e.radius){
                           e.health -= player.attackPower;
-                          app.main.sound.playEnemyHurtEffect();
+                          //app.main.sound.playEnemyHurtEffect();
                           b.live = false;
                           if(e.health <= 0){
                               e.alive = false;
@@ -1978,7 +1974,6 @@
               app.main.gameState = app.main.GAME_STATE.ROUND_OVER;
               var d = new Date();
               app.main.timeWaveEnded = 0;
-              console.log(app.main.timeWaveEnded);
           }
       },
 
@@ -2015,9 +2010,7 @@
 
 
   const GameStart = () =>{
-      console.log("window.onload called");
 
-      console.log("images loaded called");
       app.sound.init();
       app.exitToMenu = () => {
         state = MenuState.MAIN_MENU;
@@ -2089,7 +2082,6 @@
       radius: 20,
       doEffect: function(player){
           player.maxDistance += 20;
-          console.log("Range Up");
       }
   };
     
@@ -2101,7 +2093,6 @@
       radius: 20,
       doEffect: function(player){
           player.fireRate *= 4/5;
-          console.log("FireRateUp");
       }
   };
 
@@ -2129,7 +2120,6 @@
               var e = app.main.enemies[i];
               e.speed = e.speed*(4/5);
           }
-          console.log("Slow Enemy");
       }
   };
     
@@ -2142,7 +2132,6 @@
       onGround: false,
       doEffect: function(player){
           player.speed = player.speed*(5/4);
-          console.log("SpeedUp");
       }
   };
     
@@ -2157,7 +2146,6 @@
           for (var p = 0; p < app.main.players.length; p++){
               app.main.players[p].speed = app.main.players[p].speed*(5/4);
             }
-          console.log("SpeedUpAllPlayers");
       }
   };
   //-----------Negative-----------
@@ -2182,7 +2170,6 @@
       radius: 20,
       doEffect: function(player){
           player.maxDistance -= 20;
-          console.log("Range Down");
       }
   };
     
@@ -2194,7 +2181,6 @@
       radius: 20,
       doEffect: function(player){
           player.fireRate *= 5/4;
-          console.log("FireRateDown");
       }
   };
 
@@ -2212,7 +2198,6 @@
             for (var p = 0; p < app.main.players.length; p++){
               app.main.players[p].speed = app.main.players[p].speed*(4/5);
             }
-            console.log("Slow All");
       }
   };
 
@@ -2226,7 +2211,6 @@
       timeActive: 0,
       doEffect: function(player){
           app.main.bulletSize -= 1;
-          console.log("Bullet Down");
       }
   };
 
@@ -2249,7 +2233,6 @@
               e.radius = app.main.ENEMY_RADIUS;
           }
           app.main.active = false;
-          console.log("Enemy Size Down");
       }
   };
 
@@ -2262,7 +2245,6 @@
       onGround: false,
       doEffect: function(player){
           player.radius +=4;
-          console.log("Player Size Up");
       }
   };
 
@@ -2278,7 +2260,6 @@
           if(player.radius < 1){
             player.radius = 1;
           }
-          console.log("Player Size Down");
       }
   };
 
@@ -2295,7 +2276,6 @@
               var e = app.main.enemies[i];
               e.radius = app.main.ENEMY_RADIUS;
           }
-          console.log("Everyone Size Up");
       }
   };
     
@@ -2311,7 +2291,6 @@
 		doEffect: function(player){
 			if(this.beingUsed == false){
 				player.maxBullets *= 2;
-				console.log("Ammo Up");
 		    }
         }
 	};
@@ -2327,7 +2306,6 @@
 		image: undefined,
 		doEffect: function(player){
                 player.reloadTime /= 4*5;
-				console.log("Reload Down");
 		}
 	};
 
@@ -2351,7 +2329,6 @@
               var e = app.main.enemies[i];
               e.radius = app.main.ENEMY_RADIUS;
           }
-          console.log("Everyone Size Down");
       }
   };
 	var DamageUp = {
@@ -2370,7 +2347,6 @@
 					player.attackPower += 1;
 				}
 				this.active = false;
-				console.log("Reload Down");
 		}
 	};
 		
@@ -2390,7 +2366,6 @@
 				e.radius = app.main.ENEMY_RADIUS;
 			}
 			this.active = false;
-			console.log("Enemy Size Up");
 		}
 	};
     
@@ -2403,7 +2378,6 @@
       onGround: false,
       doEffect: function(player){
           app.main.PLAYER.health = app.main.PLAYER.maxHealth;
-          console.log("player at full health");
       }
   };  
 
@@ -2416,7 +2390,6 @@
       onGround: false,
       doEffect: function(player){
           app.main.PLAYER.health = app.main.PLAYER.maxHealth;
-          console.log("player at full health");
       }
   };
 
@@ -2431,7 +2404,6 @@
           app.main.PLAYER.maxHealth += 2;
           app.main.PLAYER.health += 2;
           app.main.active = false;
-          console.log("Max health increased, player slightly healed");
       }
   };
   var HealthDown = {
@@ -2445,7 +2417,6 @@
           app.main.PLAYER.maxHealth -= 2;
           app.main.PLAYER.health -= 2;
           app.main.active = false;
-          console.log("Max health decreased, player slightly damaged");
       }
   };
 
@@ -2480,13 +2451,11 @@
 
   // event listeners
   window.addEventListener("keydown",function(e){
-      //console.log("keydown=" + e.keyCode);
       myKeys.keydown[e.keyCode] = true;
 
   });
 
   window.addEventListener("keyup",function(e){
-      //console.log("keyup=" + e.keyCode);
       myKeys.keydown[e.keyCode] = false;
 
       // pausing and resuming
@@ -2519,7 +2488,6 @@
 
   // define the .sound module and immediately invoke it in an IIFE
   app.sound = (function(){
-      console.log("sound.js module loaded");
       var bgAudio = undefined;
       var effectAudio = undefined;
 
@@ -2633,7 +2601,6 @@
         imageObjects[i] = new Image();
         imageObjects[i].onload = function() {
           numLoadedImages++;
-          console.log("loaded image at '" + app.main.src + "'")
           if(numLoadedImages >= numImages) {
             callback(imageObjects); // send the images back
           }
