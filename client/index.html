@@ -846,6 +846,7 @@
           app.main.timePutOnScreen = data.itemTime;
           app.main.itemText = data.itemText;
           app.main.descriptionText = data.itemDescription;
+          app.main.timeWaveEnded = data.ended;
           app.main.update();
         });
         
@@ -1071,6 +1072,7 @@
             itemTime: app.main.timePutOnScreen,
             itemText: app.main.itemText,
             itemDescription: app.main.descriptionText,
+            ended: app.main.timeWaveEnded,
           };
           socket.emit('HostUpdatesGameInfo', info);
         }
