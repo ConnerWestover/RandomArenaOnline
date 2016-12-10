@@ -630,7 +630,7 @@
     canvas: undefined, 
     ctx: undefined,
     
-    intervalUpdateID: undefined, //used to killgame via window.clearInterval(app.main.intervalUpdateID);
+    intervalUpdateID: 0, //used to killgame via window.clearInterval(app.main.intervalUpdateID);
 
     lastTime: 0, // used by calculateDeltaTime() 
     debug: true,
@@ -800,9 +800,9 @@
           app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
           app.main.reset();
 
-          app.main.intervalUpdateID = window.setInterval(() => {
-            app.main.update();
-          }, 1000/60);
+          if (app.main.intervalUpdateID == 0){
+            app.main.intervalUpdateID = window.setInterval(app.main.update, 1000/60);
+          }
           
         });
         
@@ -869,7 +869,7 @@
         this.players = [];
         this.roundScore = 0;
         window.clearInterval(this.intervalUpdateID);
-        this.intervalUpdateID = undefined;
+        this.intervalUpdateID = 0;
         app.exitToMenu();
       },
 
