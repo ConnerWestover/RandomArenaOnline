@@ -1290,21 +1290,48 @@
 			}
 		}
 		
+		
 		var p = {};
-		p.speed = 150;
+		
+		if (p.startingClass == 0){
+			p.weapon = "shotgun";
+			p.speed = 100;
+			p.health = 12;
+			p.maxHealth = 12;
+			p.attackPower = 5;
+			p.maxBullets = 2;
+			p.fireRate = 800;
+			p.reloadTime = 500;
+		}else if (p.startingClass == 1){
+			p.weapon = "pistol";
+			p.speed = 200;
+			p.health = 10;
+			p.maxHealth = 10;
+			p.attackPower = 1;
+			p.maxBullets = 10;
+			p.fireRate = 500;
+			p.reloadTime = 300;
+		}else{
+			p.weapon = "rifle";
+			p.speed = 150
+			p.health = 8;
+			p.maxHealth = 8;
+			p.attackPower = 2;
+			p.maxBullets = 8;
+			p.fireRate = 1000;
+			p.reloadTime = 400;
+		}
+		
+		
 		p.x = this.WIDTH/2;
 		p.y = this.HEIGHT/2;
 		p.moveX = movePlayerX;
 		p.moveY = movePlayerY;
-		p.health = 10;
-		p.maxHealth = 10;
-		p.weapon = "gun";
-		p.attackPower = 1;
 		p.defense = 1;
 		p.radius = 18;
-		p.maxBullets = 10;
 		p.bullets = [];
 		p.makeBullet = makeBullet;
+		p.bulletsFired = 0;
 		p.fireUp = fireU;
 		p.fireDown = fireD;
 		p.fireLeft = fireL;
@@ -1313,7 +1340,6 @@
 		p.gotHit = false;
 		p.timeGotHit = 0;
 		p.timeLastFired = 0;
-		p.fireRate = 500;
 		p.maxDistance = 600;
         
         p.name = name;
