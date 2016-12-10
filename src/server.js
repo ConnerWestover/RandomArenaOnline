@@ -29,11 +29,13 @@ const onSetupSockets = (sock) => {
       });
       console.log(`Failed To Create Room With Name: ${data.name}`);
     } else {
+      var lobby = [];
+      lobby[0] = (data.user)
       roomNames[data.name] = {
         name: data.name,
         playerCount: 1,
         host: data.user,
-        playersInLobby: {},
+        playersInLobby: lobby,
       };
       console.log(`Created Room With Name: ${data.name}`);
       roomNames[data.name].playersInLobby[0] = data.userAgent;
@@ -55,20 +57,41 @@ const onSetupSockets = (sock) => {
     } else if (roomNames[data.name].playerCount < 4) {
       socket.join(data.name);
       roomNames[data.name].playersInLobby[roomNames[data.name].playerCount] = data.user;
+      roomNames[data.name].playerCount += 1;
       socket.emit('ReceiveFindRoomCheck', {
         success: true,
         index: roomNames[data.name].playerCount,
         playersInLobby: roomNames[data.name].playersInLobby,
         host: roomNames[data.name].host,
+        room: data.name,
       });
       console.log(`Found Room: ${data.name}`);
-      roomNames[data.name].playerCount += 1;
       socket.to(data.name).emit('NewRoomMember', roomNames[data.name].playersInLobby);
     } else {
       socket.emit('ReceiveFindRoomCheck', {
         success: false,
         reason: 'THAT ROOM IS FULL',
       });
+    }
+  });
+  
+  socket.on('FindAnOpenRoom', (data) => {
+   for (name in roomNames){
+      console.log(`Checking Room ${name}`);
+      if(roomNames[name].playerCount < 4){
+         socket.join(name);
+        roomNames[name].playersInLobby[roomNames[name].playerCount] = data.user;
+        roomNames[name].playerCount += 1;
+        console.log(`Joining Room : ${roomNames[name].name}`);
+        socket.emit('ReceiveFindRoomCheck', {
+          success: true,
+          index: roomNames[name].playerCount,
+          playersInLobby: roomNames[name].playersInLobby,
+          host: roomNames[name].host,
+          room: name,
+        });
+        socket.to(name).emit('NewRoomMember', roomNames[name].playersInLobby);
+      }
     }
   });
 
@@ -80,13 +103,7 @@ const onSetupSockets = (sock) => {
   });
 
   socket.on('HostUpdatesGameInfo', (data) => {
-    const info = {
-      players: data.players,
-      playerCount: data.playerCount,
-      enemies: data.enemies,
-      name: data.room,
-    };
-    socket.to(data.room).emit('PlayersReceiveGameInfo', info);
+    socket.to(data.room).emit('PlayersReceiveGameInfo', data);
   });
 
   socket.on('KillRoomWithName', (name) => {

@@ -121,7 +121,7 @@
         if(data.success){
           state = MenuState.IN_LOBBY_MEMBER;
           failedToFindRoom = false;
-          room = document.getElementById('RoomName').value;
+          room = data.room;
           index = data.index
           playersInLobby = data.playersInLobby;
           playersInLobby[0] = host;
@@ -282,7 +282,6 @@
 		  ctx.textBaseline = "middle";
           ctx.strokeRect(0,0,130,60);
           fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
-          
           fillText(ctx, "Start Lobby",  WIDTH/2,  HEIGHT*2/5, "30pt Permanent Marker", "black");
           ctx.strokeRect(WIDTH/2 - 150, HEIGHT*2/5 - 40, 300, 80);
           
@@ -291,7 +290,14 @@
           }
           
 		  ctx.restore();
-        } 
+        }
+        else if (state == MenuState.LOBBY_FINDING){
+          ctx.strokeStyle = "black";
+		  ctx.fillStyle = "black";
+		  ctx.textAlign = "center";
+		  ctx.textBaseline = "middle";
+          fillText(ctx, "Looking For A Room..",  WIDTH/2,  HEIGHT*2/5, "60pt Permanent Marker", "black");
+        }
         else if (state == MenuState.IN_LOBBY_HOST){
           ctx.save();
 		  ctx.strokeStyle = "black";
@@ -468,6 +474,13 @@
                 if (mouse.x > WIDTH*3/4 - 150 && mouse.x < WIDTH*3/4 + 150){
                   state = MenuState.LOBBY_FINDING;
                   username = document.getElementById('userName').value;
+                  socket.emit('FindAnOpenRoom', {user: {
+                                                  username: username,
+                                                  index: index,
+                                                  host: false,
+                                                  ready: false,
+                                                  startingClass: startingClass
+                                               }});
                 }
               }
         } 
@@ -497,6 +510,9 @@
                                             });
           }
         }
+     else if (state == MenuState.LOBBY_FINDING){
+       
+     }
         else if (state >= 8){
           //WIDTH*11/16, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20
           if(mouse.y > HEIGHT*((2 * index) + 1)/10 + HEIGHT*1/40 && mouse.y < HEIGHT*((2 * index) + 1)/10 + HEIGHT*3/40){
@@ -609,6 +625,8 @@
       //  properties
     WIDTH : 1080,
     HEIGHT: 810, 
+    
+    ACTUALHEIGHT: 870,
 
     canvas: undefined, 
     ctx: undefined,
@@ -688,6 +706,7 @@
           DEFAULT : 1,
           ROUND_OVER : 2,
           GAME_OVER : 3,
+          OUT_OF_GAME: 4, //Only used to prevent Update running beyond what it's suppose to
       },	
 
       //  Part II - #2,3,4
@@ -750,7 +769,7 @@
         
           app.main.canvas = document.querySelector('canvas');
           app.main.canvas.width = app.main.WIDTH;
-          app.main.canvas.height = app.main.HEIGHT;
+          app.main.canvas.height = app.main.ACTUALHEIGHT;
           app.main.ctx = app.main.canvas.getContext('2d');
           app.main.totalScore = 0;
           app.main.gameState = 1;
@@ -766,14 +785,19 @@
           
           app.main.numPlayers = data.numPlayers;
           
-          //Use data.playersFromLobby to create classes
+          var startingClass = [];
+          var names = [];
+          for (var j = 0; j < data.playersFromLobby.length; j++){
+            startingClass.append(data.playersFromLobby[i].startingClass);
+            names.append(data.playersFromLobby[i].username);
+          }
           
           app.main.amHost = true;
           app.main.room = data.room;
           app.main.playerIndex = 0;
           
           for(var i = 0; i < app.main.numPlayers; i++){
-              app.main.players[i] = app.main.makePlayer();
+              app.main.players[i] = app.main.makePlayer(startingClass[i], names[i]);
           }
           app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
           app.main.reset();
@@ -789,7 +813,9 @@
           app.main.numPlayers = data.playerCount;
           app.main.enemies = data.enemies;
           app.main.room = data.name;
-          
+          app.main.totalScore = data.score;
+          app.main.gameState = data.state;
+          app.main.itemsOnGround = data.items;
           
           app.main.intervalUpdateID = window.setInterval(() => {
             app.main.update();
@@ -797,7 +823,7 @@
         });
         
         socket.on('HostReceivesUserInput', (data)=>{
-          if(!app.main.amHost){ return;}
+          if(!app.main.amHost || app.main.gameState == app.main.GAME_STATE.OUT_OF_GAME){ return;}
           
           var dt = app.main.calculateDeltaTime();
           
@@ -839,12 +865,12 @@
       },
     
       killGameResetData: function(){
+        app.main.gameState = app.main.GAME_STATE.OUT_OF_GAME;
         this.totalScore = 0;
         this.enemies = [];
         this.players = [];
         this.playersDead = 0;
         this.roundScore = 0;
-        app.main.gameState = 1;
         window.clearInterval(this.intervalUpdateID);
         this.intervalUpdateID = undefined;
         app.exitToMenu();
@@ -853,8 +879,10 @@
       // - EVERYONE -
       update: () => {
           //app.main.animationID = requestAnimationFrame(app.main.update.bind(this));
+          
+          if (app.main.gameState == app.main.GAME_STATE.OUT_OF_GAME){ return; }
 
-          app.main.ctx.clearRect(0,0,app.main.WIDTH, app.main.HEIGHT);
+          app.main.ctx.clearRect(0,0,app.main.WIDTH, app.main.ACTUALHEIGHT);
 
           var dt = app.main.calculateDeltaTime();
 
@@ -950,7 +978,7 @@
                     data.firePosX = true;
                     data.sendMe = true;
                 }
-                
+
                 if(data.sendMe){
                   socket.emit('UserSendsInputToHost', data);
                 }
@@ -969,9 +997,9 @@
               //draw hud
               app.main.drawItemText(app.main.ctx);
               app.main.drawHUD(app.main.ctx);
-    
+
           }
-      
+
 
         if(app.main.gameState == app.main.GAME_STATE.ROUND_OVER){
             if(app.main.amHost == true){
@@ -981,19 +1009,22 @@
                 }
             }
         }
-        
+
         if (app.main.gameState == app.main.GAME_STATE.GAME_OVER){
               if(myKeys.keydown[myKeys.KEYBOARD.KEY_SPACE]){
                 app.main.killGameResetData();
               }
         }
-        
+
         if(app.main.amHost){
           var info = {
             players: app.main.players,
             playerCount: app.main.numPlayers,
             enemies: app.main.enemies,
             room: room,
+            score: app.main.totalScore,
+            state: app.main.gameState,
+            items: app.main.itemsOnGround,
           };
           socket.emit('HostUpdatesGameInfo', info);
         }
@@ -1024,14 +1055,16 @@
           ctx.fillRect(app.main.WIDTH - 210, 2.5, 170, 22.5);
           app.main.fillText(app.main.ctx,"Total Score: " + app.main.totalScore, app.main.WIDTH - 200, 20, "14pt Permanent Marker", "black");
           ctx.lineWidth = 3;
-          ctx.strokeStyle = "black";
-          ctx.fillRect(5,5, 200, 40);
-          ctx.fillStyle = "red";
-          ctx.fillRect(5,5,200 * (app.main.players[app.main.playerIndex].health/app.main.players[app.main.playerIndex].maxHealth),40);
-          ctx.strokeRect(5,5, 200, 40);
-
-
-          ctx.fillStyle = "white";
+        
+          for (var p = 0; p < app.main.players.length; p++){
+            var player = app.main.players[p];
+            ctx.strokeStyle = "black";
+            ctx.fillStyle = "white";
+            ctx.fillRect(5 + (220 * p),5 + app.main.HEIGHT, 200, 40);
+            ctx.fillStyle = "red";
+            ctx.fillRect(5 + (220 * p), 5 + app.main.HEIGHT,200 * (player.health/player.maxHealth),40);
+            ctx.strokeRect(5 + (220 * p),5 + app.main.HEIGHT, 200, 40); 
+          }  
           if(app.main.gameState == app.main.GAME_STATE.BEGIN){
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
@@ -1049,7 +1082,11 @@
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             app.main.fillText(app.main.ctx,"You have completed this round", app.main.WIDTH/2, app.main.HEIGHT/2 - 40, "30pt Permanent Marker", "black");
-            app.main.fillText(app.main.ctx,"Press SPACE to continue", app.main.WIDTH/2, app.main.HEIGHT/2, "30pt Permanent Marker", "black");
+            if(app.main.amHost){
+              app.main.fillText(app.main.ctx,"Press SPACE to continue", app.main.WIDTH/2, app.main.HEIGHT/2, "30pt Permanent Marker", "black");
+            } else {
+              app.main.fillText(app.main.ctx,"Wait for Host to continue", app.main.WIDTH/2, app.main.HEIGHT/2, "30pt Permanent Marker", "black");
+            }
           }
           
           ctx.restore(); // NEW
@@ -1065,16 +1102,16 @@
               } else {
                   var halfW = player.radius;
                   var halfH = player.radius;
+                  var spriteP = 96 * p;
                   if (player.direction == 2){
-                      ctx.drawImage(app.main.IMAGES.player,0 + player.spriteNumber * 32,64,32,32, player.x- halfW, player.y- halfH, halfW*2, halfH*2);
+                      ctx.drawImage(app.main.IMAGES.player, spriteP + player.spriteNumber * 32,64,32,32, player.x- halfW, player.y- halfH, halfW*2, halfH*2);
                   } else if (player.direction == 3) {
-                      ctx.drawImage(app.main.IMAGES.player,0 + player.spriteNumber * 32,32,32,32,player.x- halfW, player.y- halfH, halfW*2, halfH*2);
+                      ctx.drawImage(app.main.IMAGES.player,spriteP + player.spriteNumber * 32,32,32,32,player.x- halfW, player.y- halfH, halfW*2, halfH*2);
                   } else if(player.direction == 1){
-                      ctx.drawImage(app.main.IMAGES.player,0 + player.spriteNumber * 32,1,32,31,player.x- halfW, player.y- halfH, halfW*2, halfH*2);	
+                      ctx.drawImage(app.main.IMAGES.player,spriteP + player.spriteNumber * 32,1,32,31,player.x- halfW, player.y- halfH, halfW*2, halfH*2);	
                   } else {
-                      ctx.drawImage(app.main.IMAGES.player,0 + player.spriteNumber * 32,96,32,32,player.x- halfW, player.y- halfH, halfW*2, halfH*2);
+                      ctx.drawImage(app.main.IMAGES.player,spriteP + player.spriteNumber * 32,96,32,32,player.x- halfW, player.y- halfH, halfW*2, halfH*2);
                   }
-                
               }
               ctx.restore();
 
@@ -1146,7 +1183,7 @@
       },
 
       // - HOST ONLY -
-      makePlayer: function(){
+      makePlayer: function(startingClass, name){
 		var makeBullet = function(x,y,xSpeed, ySpeed, maxDistance){
 			var move = function(dt){
 				this.x += this.xSpeed;
@@ -1278,6 +1315,8 @@
 		p.timeLastFired = 0;
 		p.fireRate = 500;
 		p.maxDistance = 600;
+        
+        p.name = name;
 		
 		//Sprite resources
 		p.timeLastSpriteChanged = 0;
