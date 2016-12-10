@@ -101,17 +101,30 @@ const onSetupSockets = (sock) => {
     socket.to(data.name).emit('UserUpdate', data.players);
     console.log(`Update Users in Room: ${data.name}`);
   });
+  
+  socket.on('LeaveRoom', (data) => {
+    var room = roomNames[data.name];
+    var playersInLobby = room.playersInLobby;
+    var index = data.user.index;
+    playersInLobby[index] = undefined;
+    for (var i = index; i < playersInLobby.length - 1; i++){
+      playersInLobby[i] = playersInLobby[i + 1];
+      playersInLobby[i].index = i;
+      playersInLobby[i + 1] = undefined;
+    }
+    room.playersInLobby = playersInLobby;
+    socket.to(data.name).emit('UserUpdate', data.players);
+    socket.leave(data.room);
+  });
 
   socket.on('HostUpdatesGameInfo', (data) => {
     socket.to(data.room).emit('PlayersReceiveGameInfo', data);
   });
 
   socket.on('KillRoomWithName', (name) => {
-    socket.to(name).emit('ForceLeaveRoom', 'Host Disconnected');
     console.log(`Kill Room: ${name}`);
-    socket.clients(name).forEach((s) => {
-      s.leave(name);
-    });
+    roomNames[name] =undefined;
+    socket.leave(name);
   });
 
   socket.on('StartGame', (room) => {

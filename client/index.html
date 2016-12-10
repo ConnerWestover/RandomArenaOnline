@@ -3,25 +3,29 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <style>
-    *{text-align:center;}
-    canvas{border:none;}
+  
+  <style type ="text/css">
+    canvas{border:none;
+          align-self: center;}
     #audioControls{ display:none;}
     #username, #roomName{
-      font-style: 'Permanent Marker';
-      z-index:101; 
-      position:absolute; 
+      font-family: 'Permanent Marker', cursive;
       top: window.innerHeight/2;
       left: window.innerWidth/2;
+      position:absolute;
       display:none;
-      font-size: 30px; 
+      font-size: 50px; 
+    }
+    input {
+      font-size: 50px;
+      width: 400px;
+      left: 275px;
+      top: 150px;
+      border:none;
+      text-decoration: underline;
     }
   </style>
   
-  <!--<script src="http://code.createjs.com/preloadjs-0.4.1.min.js"></script>-->
-  <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
-  <script src ="/socket.io/socket.io.js"></script>
-	
   <script type="text/javascript"> //Font Script
      WebFontConfig = {
 		google: { families: [ 'Permanent+Marker::latin' ] }
@@ -36,6 +40,11 @@
 		s.parentNode.insertBefore(wf, s);
 	  })(); 
   </script>
+  
+  <!--<script src="http://code.createjs.com/preloadjs-0.4.1.min.js"></script>-->
+  <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+  <script src ="/socket.io/socket.io.js"></script>
+
   <script type = "text/javascript">
   "use strict";
         
@@ -56,6 +65,12 @@
     var reason = ""
     var playersInLobby = {};
     var readyToPlay = false;
+    
+    var images = {
+      pistol: new Image(),
+      assault: new Image(),
+      sniper: new Image(),
+    };
 
     var MenuState = {
       MAIN_MENU : 0,
@@ -74,20 +89,23 @@
     var state = MenuState.MAIN_MENU;
     
     const init = () =>{
+      images.pistol.src = "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/pistol.png";
+      images.assault.src = "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/assault.png";
+      images.sniper.src = "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/sniper.png";
       socket = io.connect();
       window.addEventListener("click", onMouseUp, true);
       canvas = document.querySelector('canvas');
       ctx = canvas.getContext("2d");
-      ctx.canvas.width  = window.innerWidth - 20;
-      ctx.canvas.height = window.innerHeight - 20;
-      WIDTH = window.innerWidth - 20;
-      HEIGHT = window.innerHeight - 20;
+      ctx.canvas.width  = 1080;
+      ctx.canvas.height = 860;
+      WIDTH = 1080;
+      HEIGHT = 810;
       update();
       window.onresize=function(){
-        ctx.canvas.width  = window.innerWidth - 20;
-        ctx.canvas.height = window.innerHeight - 20;
-        WIDTH = window.innerWidth - 20;
-        HEIGHT = window.innerHeight - 20;
+        ctx.canvas.width  = 1080;
+        ctx.canvas.height = 860;
+        WIDTH = 1080;
+        HEIGHT = 810;
         update();
       };
       
@@ -142,13 +160,6 @@
         update();
       });
       
-      socket.on('ForceLeaveRoom', (reason) =>{
-        reason = reason;
-        room = "";
-        playersInLobby = {};
-        state = MenuState.LOBBY;
-      });
-      
       socket.on('StartPlay', (data)=>{
         state = MenuState.PLAYING;
         console.log("Start Play");
@@ -158,10 +169,14 @@
     
     const update = () =>{     
       ctx.clearRect(0,0,WIDTH,HEIGHT);
-       var form = document.getElementById('username');
+      var form = document.getElementById('username');
       form.style.display = 'none';
+      form.style.left = "275px"
+      form.style.top = "150px";
       var form2 = document.getElementById('roomName');
-          form2.style.display = 'none';
+      form2.style.display = 'none';
+      form2.style.left = "275px"
+      form2.style.top = "150px";
       if (state == MenuState.MAIN_MENU){
 		ctx.save();
         ctx.strokeStyle = "black";
@@ -233,8 +248,6 @@
         else if (state == MenuState.LOBBY){
           var form = document.getElementById('username');
           form.style.display = 'block';
-          form.style.left = (6*WIDTH/16).toString() + "px";
-          form.style.top = (HEIGHT/4).toString() + "px";
           ctx.save();
           ctx.strokeStyle = "black";
 		  ctx.fillStyle = "black";
@@ -242,19 +255,17 @@
 		  ctx.textBaseline = "middle";
           ctx.strokeRect(0,0,130,60);
           fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
-          fillText(ctx, "Host A Game",  WIDTH/4,  HEIGHT*2/5, "30pt Permanent Marker", "black");
-          fillText(ctx, "Find A Game",  WIDTH/2,  HEIGHT*2/5, "30pt Permanent Marker", "black");
-          fillText(ctx, "Join A Game", 3* WIDTH/4,  HEIGHT*2/5, "30pt Permanent Marker", "black");
-          ctx.strokeRect(WIDTH/4 - 150, HEIGHT*2/5 - 40, 300, 80);
-          ctx.strokeRect(WIDTH/2 - 150, HEIGHT*2/5 - 40, 300, 80);
-          ctx.strokeRect(WIDTH*3/4 - 150, HEIGHT*2/5 - 40, 300, 80);
+          fillText(ctx, "Host A Game",  WIDTH/2,  HEIGHT*2/5, "30pt Permanent Marker", "black");
+          fillText(ctx, "Find A Game",  WIDTH/2,  HEIGHT*3/5, "30pt Permanent Marker", "black");
+          fillText(ctx, "Join A Game",  WIDTH/2,  HEIGHT*4/5, "30pt Permanent Marker", "black");
+          ctx.strokeRect(WIDTH/2 - 300, HEIGHT*2/5 - 40, 600, 80);
+          ctx.strokeRect(WIDTH/2 - 300, HEIGHT*3/5 - 40, 600, 80);
+          ctx.strokeRect(WIDTH/2 - 300, HEIGHT*4/5 - 40, 600, 80);
           ctx.restore();
         } 
         else if (state == MenuState.LOBBY_HOST){
           var form = document.getElementById('roomName');
           form.style.display = 'block';
-          form.style.left = (6*WIDTH/16).toString() + "px";
-          form.style.top = (HEIGHT/4).toString() + "px";
           ctx.save();
 		  ctx.strokeStyle = "black";
 		  ctx.fillStyle = "black";
@@ -273,8 +284,6 @@
         else if (state == MenuState.LOBBY_BY_NAME){
           var form = document.getElementById('roomName');
           form.style.display = 'block';
-          form.style.left = (6*WIDTH/16).toString() + "px";
-          form.style.top = (HEIGHT/4).toString() + "px";
           ctx.save();
 		  ctx.strokeStyle = "black";
 		  ctx.fillStyle = "black";
@@ -296,6 +305,8 @@
 		  ctx.fillStyle = "black";
 		  ctx.textAlign = "center";
 		  ctx.textBaseline = "middle";
+          ctx.strokeRect(0,0,130,60);
+          fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
           fillText(ctx, "Looking For A Room..",  WIDTH/2,  HEIGHT*2/5, "60pt Permanent Marker", "black");
         }
         else if (state == MenuState.IN_LOBBY_HOST){
@@ -306,23 +317,33 @@
 		  ctx.textBaseline = "middle";
           ctx.strokeRect(0,0,130,60);
           fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
+          ctx.font = "40pt Permanent Marker";
+          ctx.color = "red";
+          ctx.fillText(room, WIDTH/2, HEIGHT*1/20, 800);
           ctx.textAlign = "left";
           
-          ctx.strokeRect(WIDTH/16, HEIGHT/10, WIDTH*7/8, HEIGHT*3/20);
-          ctx.strokeRect(WIDTH/16, HEIGHT*3/10, WIDTH*7/8, HEIGHT*3/20);
-          ctx.strokeRect(WIDTH/16, HEIGHT*5/10, WIDTH*7/8, HEIGHT*3/20);
-          ctx.strokeRect(WIDTH/16, HEIGHT*7/10, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*2/10 - 20, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*4/10 - 20, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*6/10 - 20, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*8/10 - 20, WIDTH*7/8, HEIGHT*3/20);
           
-          //draw host
+          /*//draw host
           drawUserInLobby({
             username: username,
             index: 0,
             host: host,
             ready: false,
             startingClass: startingClass
-          }, 0);
+          }, 0);*/
           
           var playersReady = true;
+          
+          if(playersInLobby[0] != undefined){
+           drawUserInLobby(playersInLobby[0], 0);
+            if(!playersInLobby[0].ready){
+              playersReady = false;
+            }
+          }
           
           if(playersInLobby[1] != undefined){
            drawUserInLobby(playersInLobby[1], 1);
@@ -346,8 +367,8 @@
           readyToPlay = playersReady;
           
           if(playersReady){
-            ctx.strokeRect(WIDTH*3/4, HEIGHT*18/20, WIDTH/8, HEIGHT/20);
-            fillText(ctx, "Ready", WIDTH*3/4 + 10, HEIGHT*37/40,"30pt Permanent Marker", "black")
+            ctx.strokeRect(WIDTH*3/4, HEIGHT*19/20, WIDTH/8, HEIGHT/20);
+            fillText(ctx, "Ready", WIDTH*3/4 + 10, HEIGHT*39/40,"30pt Permanent Marker", "black")
           }
           
 		  ctx.restore();
@@ -362,10 +383,10 @@
           fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
           ctx.textAlign = "left";
           
-          ctx.strokeRect(WIDTH/16, HEIGHT/10, WIDTH*7/8, HEIGHT*3/20);
-          ctx.strokeRect(WIDTH/16, HEIGHT*3/10, WIDTH*7/8, HEIGHT*3/20);
-          ctx.strokeRect(WIDTH/16, HEIGHT*5/10, WIDTH*7/8, HEIGHT*3/20);
-          ctx.strokeRect(WIDTH/16, HEIGHT*7/10, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*2/10 - 20, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*4/10 - 20, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*6/10 - 20, WIDTH*7/8, HEIGHT*3/20);
+          ctx.strokeRect(WIDTH/16, HEIGHT*8/10 - 20, WIDTH*7/8, HEIGHT*3/20);
           
           if(playersInLobby[0] != undefined){
            drawUserInLobby(playersInLobby[0], 0);
@@ -384,39 +405,44 @@
     };
     
     const drawUserInLobby = (user, i) =>{
-      if (user.host){
+      if(i == 0){ ctx.fillStyle = "black";}
+      if(i == 1){ ctx.fillStyle = "blue";}
+      if(i == 2){ ctx.fillStyle = "red";}
+      if(i == 3){ ctx.fillStyle = "green";}
+      ctx.font = "30pt Permanent Marker"
+      if (user.host || i == 0){
         //UserName
-        fillText(ctx, username + " - Host", WIDTH/16 + 20, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+        ctx.fillText( user.username + " - Host", WIDTH/16 + 20, (HEIGHT*((2 * i) + 2)/10+HEIGHT*3/40) - 20, 635);
       } else if (user.ready){
         //UserName
-        fillText(ctx, username + " - Ready", WIDTH/16 + 20, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+        ctx.fillText( user.username + " - Ready", WIDTH/16 + 20, (HEIGHT*((2 * i) + 2)/10+HEIGHT*3/40) - 20, 635);
       } else {
-        fillText(ctx, username + " - Not Ready", WIDTH/16 + 20, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+        ctx.fillText( user.username + " - Not Ready", WIDTH/16 + 20, (HEIGHT*((2 * i) + 2)/10+HEIGHT*3/40) - 20, 635);
       }
 
       //Class Box 1
-      ctx.strokeRect(WIDTH*11/16, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      ctx.strokeRect(WIDTH*11/16, (HEIGHT*((2 * i) + 1)/10+HEIGHT*5/40) - 20, WIDTH/16, HEIGHT*2/20)
       if(user.startingClass == 1){
         ctx.fillStyle = "red";
-        ctx.fillRect(WIDTH*11/16, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+        ctx.fillRect(WIDTH*11/16, (HEIGHT*((2 * i) + 1)/10+HEIGHT*5/40) - 20, WIDTH/16, HEIGHT*2/20)
       }
-      fillText(ctx, "S", WIDTH*91/128, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
-
+      ctx.drawImage(images.assault, WIDTH*11/16, (HEIGHT*((2 * i) + 1)/10+HEIGHT*5/40) - 20, WIDTH/16, HEIGHT*2/20);
+      
       //Class Box 2
-      ctx.strokeRect(WIDTH*12/16 + 20, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      ctx.strokeRect(WIDTH*12/16 + 20, (HEIGHT*((2 * i) + 1)/10+HEIGHT*5/40) - 20, WIDTH/16, HEIGHT*2/20)
       if(user.startingClass == 2){
         ctx.fillStyle = "blue";
-        ctx.fillRect(WIDTH*12/16 + 20, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+        ctx.fillRect(WIDTH*12/16 + 20, (HEIGHT*((2 * i) + 1)/10+HEIGHT*5/40) - 20, WIDTH/16, HEIGHT*2/20)
       }
-      fillText(ctx, "P", WIDTH*25/32, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+      ctx.drawImage(images.pistol, WIDTH*12/16 + 20, (HEIGHT*((2 * i) + 1)/10+HEIGHT*5/40) - 20, WIDTH/16, HEIGHT*2/20);
 
       //Class Box 3
-      ctx.strokeRect(WIDTH*13/16 + 40, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+      ctx.strokeRect(WIDTH*13/16 + 40, (HEIGHT*((2 * i) + 1)/10+HEIGHT*5/40) - 20, WIDTH/16, HEIGHT*2/20);
       if(user.startingClass == 3){
         ctx.fillStyle = "yellow";
-        ctx.fillRect(WIDTH*13/16 + 40, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20)
+        ctx.fillRect(WIDTH*13/16 + 40, (HEIGHT*((2 * i) + 1)/10+HEIGHT*5/40) - 20, WIDTH/16, HEIGHT*2/20);
       }
-      fillText(ctx, "R", WIDTH*55/64, HEIGHT*((2 * i) + 1)/10+HEIGHT*3/40, "30pt Permanent Marker", "black");
+      ctx.drawImage(images.sniper, WIDTH*13/16 + 40, (HEIGHT*((2 * i) + 1)/10+HEIGHT*5/40) - 20, WIDTH/16, HEIGHT*2/20);
     }
     
     const fillText = (ctx, string, x, y, css, color) => {
@@ -459,19 +485,18 @@
 				state = MenuState.ABOUT
 				
 			}
-		} 
-        else if(state == MenuState.LOBBY){
-              if(mouse.y < HEIGHT*2/5 + 40 && mouse.y > HEIGHT*2/5 - 40){
-                if (mouse.x > WIDTH/4 - 150 && mouse.x < WIDTH/4 + 150){
+		} else if(state == MenuState.LOBBY){
+              if(mouse.x > WIDTH/2 - 300 && mouse.x < WIDTH/2 + 300 ){
+                if (mouse.y > HEIGHT*2/5 - 40 && mouse.y < HEIGHT*2/5 + 40){
                   state = MenuState.LOBBY_HOST;
                   username = document.getElementById('userName').value;
                   host = true;
                 }
-                if (mouse.x > WIDTH/2 - 150 && mouse.x < WIDTH/2 + 150){
+                if (mouse.y > HEIGHT*3/5 - 40 && mouse.y < HEIGHT*3/5 + 40){
                   state = MenuState.LOBBY_BY_NAME;
                   username = document.getElementById('userName').value;
                 }
-                if (mouse.x > WIDTH*3/4 - 150 && mouse.x < WIDTH*3/4 + 150){
+                if (mouse.y > HEIGHT*4/5 - 40 && mouse.y < HEIGHT*4/5 + 40){
                   state = MenuState.LOBBY_FINDING;
                   username = document.getElementById('userName').value;
                   socket.emit('FindAnOpenRoom', {user: {
@@ -483,8 +508,7 @@
                                                }});
                 }
               }
-        } 
-        else if (state == MenuState.LOBBY_HOST){
+        }  else if (state == MenuState.LOBBY_HOST){
           if(mouse.y < HEIGHT*2/5 + 40 && mouse.y > HEIGHT*2/5 - 40 && mouse.x > WIDTH/2 - 150 && mouse.x < WIDTH/2 + 150){
             socket.emit('CreateRoomWithName', { name:document.getElementById('RoomName').value,
                                                host: {
@@ -495,8 +519,7 @@
                                                   startingClass: startingClass
                                                }});
           }
-        }
-     else if (state == MenuState.LOBBY_BY_NAME){
+        } else if (state == MenuState.LOBBY_BY_NAME){
           if(mouse.y < HEIGHT*2/5 + 40 && mouse.y > HEIGHT*2/5 - 40 && mouse.x > WIDTH/2 - 150 && mouse.x < WIDTH/2 + 150){
             socket.emit('FindRoomWithName', {
                                               name: document.getElementById('RoomName').value,
@@ -512,8 +535,8 @@
         }
         else if (state >= 8){
           console.dir(state);
-          //WIDTH*11/16, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20
-          if(mouse.y > HEIGHT*((2 * index) + 1)/10 + HEIGHT*1/40 && mouse.y < HEIGHT*((2 * index) + 1)/10 + HEIGHT*3/40){
+          //(HEIGHT*((2 * i) + 1)/10+HEIGHT*5/40) - 20
+          if(mouse.y > HEIGHT*((2 * index) + 1)/10 + HEIGHT*5/40 - 20 && mouse.y < HEIGHT*((2 * index) + 1)/10 + HEIGHT*9/40 - 20){
             if(mouse.x > WIDTH*11/16 && mouse.x < WIDTH*12/16){
               console.log('valid S');
               startingClass = 1;
@@ -565,7 +588,7 @@
         if(state == MenuState.IN_LOBBY_HOST && readyToPlay){
           //WIDTH*3/4, HEIGHT*18/20, WIDTH/8, HEIGHT/20
           if(mouse.x > WIDTH*3/4 && mouse.x < WIDTH*7/8 && 
-             mouse.y > HEIGHT*18/20 && mouse.y < HEIGHT*19/20){
+             mouse.y > HEIGHT*19/20 && mouse.y < HEIGHT){
             socket.emit('StartGame', room);
             state = MenuState.PLAYING;
             GameStart();
@@ -574,12 +597,14 @@
           
         if ( state != MenuState.MAIN_MENU){
 			if (mouse.x < 130 && mouse.y < 60){
-				state = MenuState.MAIN_MENU;
                 if (state == MenuState.IN_LOBBY_HOST){
                   socket.emit("KillRoomWithName", room);
+                  playersInLobby = [];
+                  room = "";
+                  startingClass = 0;
                 }
                 if (state == MenuState.IN_LOBBY_MEMBER){
-                  socket.emit("LeaveRoom", {
+                  socket.emit('LeaveRoom', {
                     user: {
                       username: username,
                       index: index,
@@ -589,7 +614,11 @@
                     },
                     name: room
                   });
+                  playersInLobby = [];
+                  room = "";
+                  startingClass = 0;
                 }
+                state = MenuState.MAIN_MENU;
 			}
 		}
 		update();
@@ -623,9 +652,9 @@
   app.main = {
       //  properties
     WIDTH : 1080,
-    HEIGHT: 810, 
+    HEIGHT: 760, 
     
-    ACTUALHEIGHT: 910,
+    ACTUALHEIGHT: 860,
 
     canvas: undefined, 
     ctx: undefined,
@@ -721,6 +750,8 @@
         bear      : new Image(),
         bunny     : new Image(),
         wolf      : new Image(),
+        freddy    : new Image(),
+        bat       : new Image(),
         pill      : new Image(),
         mushroom  : new Image(),
         flower1   : new Image(),
@@ -730,11 +761,13 @@
       },
     
       IMAGESRCS: {
+        freddy: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/freddy.png",
         zombie: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/zombiesheet.png",
         player: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/playersheet.png",
         deer: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/deer.png",
         bear: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/bear.png",
         bunny: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/bunny.png",
+        bat: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/bat.png",
         wolf: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/wolf.png",
         pill : "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/pill.png",
         mushroom : "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/mushroom.png",
@@ -751,10 +784,12 @@
           //app.main.sound.playBGAudio();
           app.main.IMAGES.player.src = app.main.IMAGESRCS.player;
           app.main.IMAGES.zombie.src = app.main.IMAGESRCS.zombie;
+          app.main.IMAGES.freddy.src = app.main.IMAGESRCS.freddy;
           app.main.IMAGES.deer.src = app.main.IMAGESRCS.deer;
           app.main.IMAGES.bear.src = app.main.IMAGESRCS.bear;
           app.main.IMAGES.wolf.src = app.main.IMAGESRCS.wolf;
           app.main.IMAGES.bunny.src = app.main.IMAGESRCS.bunny;
+          app.main.IMAGES.bat.src = app.main.IMAGESRCS.bat;
           app.main.IMAGES.pill.src = app.main.IMAGESRCS.pill;
           app.main.IMAGES.mushroom.src = app.main.IMAGESRCS.mushroom;
           app.main.IMAGES.flower1.src = app.main.IMAGESRCS.flower1;
@@ -783,10 +818,10 @@
           
           app.main.numPlayers = data.numPlayers;
           
-          var startingClass = [];
+          var startingClasses = [];
           var names = [];
-          for (var j = 0; j < data.playersFromLobby.length; j++){
-            startingClass[j] = (data.playersFromLobby[j].startingClass);
+          for (var j = 0; j < data.numPlayers; j++){
+            startingClasses[j] = (data.playersFromLobby[j].startingClass);
             names[j] = (data.playersFromLobby[j].username);
           }
           
@@ -795,7 +830,7 @@
           app.main.playerIndex = 0;
           
           for(var i = 0; i < app.main.numPlayers; i++){
-              app.main.players[i] = app.main.makePlayer(startingClass[i], names[i]);
+              app.main.players[i] = app.main.makePlayer(startingClasses[i], names[i]);
           }
           app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
           app.main.reset();
@@ -816,7 +851,7 @@
           app.main.itemsOnGround = data.items;
           app.main.timePutOnScreen = data.itemTime;
           app.main.itemText = data.itemText;
-          
+          app.main.descriptionText = data.itemDescription;
           app.main.update();
         });
         
@@ -856,7 +891,7 @@
       // - HOST ONLY -
       reset: function(){
           app.main.roundScore = 0;
-          app.main.numEnemies += 5;
+          app.main.numEnemies += (5 * app.main.numPlayers);
           app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
           // - SERVER HERE -
           // - SEND RESET TO PARTY IF HOST
@@ -868,8 +903,13 @@
         this.enemies = [];
         this.players = [];
         this.roundScore = 0;
+        app.main.eBullActive = true;
+        app.main.eBullLethal = false;
+        app.main.bulletSize = 5;
+        app.main.ENEMY_RADIUS = 18;
         window.clearInterval(this.intervalUpdateID);
         this.intervalUpdateID = 0;
+        socket.emit("KillRoomWithName", room);
         app.exitToMenu();
       },
 
@@ -893,7 +933,6 @@
           if (app.main.gameState == app.main.GAME_STATE.DEFAULT || app.main.gameState == app.main.GAME_STATE.ROUND_OVER || app.main.gameState == app.main.GAME_STATE.GAME_OVER){
               if(app.main.amHost == true){ //host update
                   app.main.moveEnemy(dt);
-                  app.main.checkTemporary();
                   app.main.checkEnemiesDead();
                   app.main.checkForCollisions();
                 
@@ -1033,7 +1072,8 @@
             state: app.main.gameState,
             items: app.main.itemsOnGround,
             itemTime: app.main.timePutOnScreen,
-            itemText: app.main.itemText
+            itemText: app.main.itemText,
+            itemDescription: app.main.descriptionText,
           };
           socket.emit('HostUpdatesGameInfo', info);
         }
@@ -1335,40 +1375,34 @@
 		p.spriteNumber = 0;
 		p.direction = 0; // 0 = up, 1 = down, 2 = right, 3 = left
         
-        if (p.startingClass == 0){
-			p.weapon = "shotgun";
-			p.speed = 100;
-			p.health = 12;
-			p.maxHealth = 12;
-			p.attackPower = 5;
-			p.maxBullets = 2;
-			p.fireRate = 800;
-			p.reloadTime = 500;
-		}else if (p.startingClass == 1){
-			p.weapon = "pistol";
+        if (p.startingClass == 1){
+			p.weapon = "Assault Rifle";
 			p.speed = 200;
 			p.health = 10;
 			p.maxHealth = 10;
-			p.attackPower = 1;
+			p.attackPower = 0.5;
+			p.maxBullets = 50;
+			p.fireRate = 150;
+			p.reloadTime = 300;
+		}else if (p.startingClass == 2){
+			p.weapon = "Pistol";
+			p.speed = 150;
+			p.health = 12;
+			p.maxHealth = 12;
+			p.attackPower = 2;
 			p.maxBullets = 10;
-			p.fireRate = 500;
+			p.fireRate = 600;
 			p.reloadTime = 300;
 		}else{
-			p.weapon = "rifle";
+			p.weapon = "Sniper Rifle";
 			p.speed = 150
-			p.health = 8;
-			p.maxHealth = 8;
-			p.attackPower = 2;
+			p.health = 10;
+			p.maxHealth = 10;
+			p.attackPower = 5;
 			p.maxBullets = 8;
-			p.fireRate = 1000;
-			p.reloadTime = 400;
+			p.fireRate = 1500;
+			p.reloadTime = 300;
 		}
-			
-		var image = new Image();
-     
-		image.src = app.IMAGES['playerImage'];
-			
-		p.image = image;
 		
 		return p;
 	},
@@ -1531,7 +1565,7 @@
 			e.fireLeft = fireL;
 			e.fireRight = fireR;
 			e.timeLastFired = 0;
-			e.fireRate = 2000;
+			e.fireRate = 3000;
 			e.fireDirection = 0;
 			
 			e.timeLastSpriteChanged = 0;
@@ -1540,16 +1574,34 @@
 			
 			//IMAGES
 			var inum;
-			var r = getRandom(0,1);
+			var r = getRandom(0,2.25);
 			if (r <= .25){
 				inum = 1;
 			} else if (r > .25 & r <= .5){
 				inum = 2;
 			} else if (r > .5 && r <= .75){
 				inum = 3;
-			} else {
+			} else if (r > .75 && r <= 1){
 				inum = 4;
-			}
+			} else if (r > 1 && r <= 1.25){
+				inum = 5;
+			} else if (r > 1.25 & r <= 1.5){
+				inum = 6;
+			} else if (r > 1.5 && r <= 1.75){
+				inum = 7;
+			} else if (r > 1.75 && r <= 2){
+				inum = 8;
+			} else if (r > 2 && r <= 2.25){
+				inum = 9;
+			} else if (r > 2.25 & r <= 2.5){
+				inum = 10;
+			} else if (r > 2.5 && r <= 2.75){
+				inum = 11;
+			} else if (r > 2.75 && r <= 3){
+				inum = 12;
+			} else if (r > 3 && r <= 3.25){
+				inum = 13;
+			} 
 			
 			e.imageNumber = inum;
             e.row = 0;
@@ -1586,7 +1638,45 @@
                   if(e.imageNumber == 2) { EnemyImage = app.main.IMAGES.wolf; }
                   if(e.imageNumber == 3) { EnemyImage = app.main.IMAGES.deer; }
                   if(e.imageNumber == 4) { EnemyImage = app.main.IMAGES.bunny;}
-                  if(EnemyImage.src == undefined){
+                  if(e.imageNumber == 13) { EnemyImage = app.main.IMAGES.bat; console.log("bat");}
+                
+                  if (e.imageNumber >= 5 && e.imageNumber <= 8) {
+                    var halfW = e.radius;
+                    var halfH = e.radius;
+                    var spriteP = ((e.imageNumber - 5) * 96);
+                    if( Math.abs(e.xSpeed) >= Math.abs(e.ySpeed)){
+                      if(e.xSpeed >= 0){
+                        ctx.drawImage(app.main.IMAGES.zombie,spriteP + e.spriteNumber * 32,64,32,32,e.x- halfW, e.y- halfH, halfW*2, halfH*2);
+                      }
+                      else {
+                        ctx.drawImage(app.main.IMAGES.zombie,spriteP + e.spriteNumber * 32,32,32,32,e.x- halfW, e.y- halfH, halfW*2, halfH*2);
+                      }
+                    } else {
+                      if(e.ySpeed >= 0){
+                        ctx.drawImage(app.main.IMAGES.zombie,spriteP + e.spriteNumber * 32,0,32,31,e.x- halfW, e.y- halfH, halfW*2, halfH*2);	
+                      } else {
+                        ctx.drawImage(app.main.IMAGES.zombie,spriteP + e.spriteNumber * 32,96,32,32,e.x- halfW, e.y- halfH, halfW*2, halfH*2);
+                      }
+                    }
+                  }else if (e.imageNumber >= 9 && e.imageNumber <= 12) {
+                    var halfW = e.radius;
+                    var halfH = e.radius;
+                    var spriteP = ((e.imageNumber - 9) * 96);
+                    if( Math.abs(e.xSpeed) >= Math.abs(e.ySpeed)){
+                      if(e.xSpeed >= 0){
+                        ctx.drawImage(app.main.IMAGES.freddy,spriteP + e.spriteNumber * 32,64,32,32,e.x- halfW, e.y- halfH, halfW*2, halfH*2);
+                      }
+                      else {
+                        ctx.drawImage(app.main.IMAGES.freddy,spriteP + e.spriteNumber * 32,32,32,32,e.x- halfW, e.y- halfH, halfW*2, halfH*2);
+                      }
+                    } else {
+                      if(e.ySpeed >= 0){
+                        ctx.drawImage(app.main.IMAGES.freddy,spriteP + e.spriteNumber * 32,0,32,31,e.x- halfW, e.y- halfH, halfW*2, halfH*2);	
+                      } else {
+                        ctx.drawImage(app.main.IMAGES.freddy,spriteP + e.spriteNumber * 32,96,32,32,e.x- halfW, e.y- halfH, halfW*2, halfH*2);
+                      }
+                    }
+                  }else if(EnemyImage.src == undefined){
                      ctx.fillStyle = "green";
                       ctx.fillRect(e.x - 16, e.y - 16, 32, 32);
                   } else {
@@ -1724,22 +1814,24 @@
               } // end enemy for loop
               for (var i = 0; i < player.bullets.length; i++){
                 for (var j = 0; j < app.main.enemies.length; j++){
-                  var e = app.main.enemies[j];
-                  var b = player.bullets[i];
-                  if(e.alive) {
-                    if (Math.abs(b.x - e.x) < b.radius + e.radius && Math.abs(b.y - e.y) < b.radius +     e.radius){
-                        e.health -= b.power;
-                        //app.main.sound.playEnemyHurtEffect();
-                        b.live = false;
-                        if(e.health <= 0){
-                            e.alive = false;
-                            app.main.totalScore = app.main.totalScore + 1;
-                            if(getRandom(0,100) > 40){
-                                var x = Math.floor(getRandom(0, myTemporaryItems.length));
-                                app.main.makeActiveItem(x, e.x,e.y);								
-                            }
-                        }
-                     }
+                  if(player.alive == true){
+                    var e = app.main.enemies[j];
+                    var b = player.bullets[i];
+                    if(e.alive) {
+                      if (Math.abs(b.x - e.x) < b.radius + e.radius && Math.abs(b.y - e.y) < b.radius +     e.radius){
+                          e.health -= player.attackPower;
+                          //app.main.sound.playEnemyHurtEffect();
+                          b.live = false;
+                          if(e.health <= 0){
+                              e.alive = false;
+                              app.main.totalScore = app.main.totalScore + 1;
+                              if(getRandom(0,100) > 40){
+                                  var x = Math.floor(getRandom(0, myTemporaryItems.length));
+                                  app.main.makeActiveItem(x, e.x,e.y);								
+                              }
+                          }
+                      }
+                    }
                   }
                 }
               }//bullet loop
@@ -1747,7 +1839,7 @@
               //ITEMS
               for (var i = 0; i < app.main.itemsOnGround.length; i++){
                   if (Math.abs(player.x - app.main.itemsOnGround[i].x) < player.radius + app.main.itemsOnGround[i].radius &&
-                      Math.abs(player.y - app.main.itemsOnGround[i].y) < player.radius + app.main.itemsOnGround[i].radius){
+                      Math.abs(player.y - app.main.itemsOnGround[i].y) < player.radius + app.main.itemsOnGround[i].radius && player.alive == true){
                       if(app.main.itemsOnGround[i].active != true && app.main.itemsOnGround[i].onGround == true){
                           app.main.itemsOnGround[i].onGround = false;
                           app.main.itemsOnGround[i].doEffect(player);
@@ -1809,17 +1901,6 @@
       },
 
       // - HOST ONLY -
-      checkTemporary: function(){
-          for(var i = 0; i < myTemporaryItems.length; i++){
-              if(myTemporaryItems[i].beingUsed != true) continue;
-              var n = timerCall();
-              if((n - myTemporaryItems[i].timeActive) > 15000){
-                  myTemporaryItems[i].doEffect(app.main.PLAYER);
-              }
-          }
-      },
-
-      // - HOST ONLY -
       //check if all enemies have been killed
       checkEnemiesDead: function(){
           var dead = 0;
@@ -1871,10 +1952,12 @@
       app.exitToMenu = () => {
         state = MenuState.MAIN_MENU;
         playersInLobby = [];
-        ctx.canvas.width  = window.innerWidth - 20;
-        ctx.canvas.height = window.innerHeight - 20;
-        WIDTH = window.innerWidth - 20;
-        HEIGHT = window.innerHeight - 20;
+        startingClass = 0;
+        room = "";
+        ctx.canvas.width  = 1080;
+        ctx.canvas.height = 860;
+        WIDTH = 1080;
+        HEIGHT = 810;
         update();
       };      
       app.main.socket = socket;
@@ -1935,8 +2018,6 @@
       description: "YOU'RE ON FIRE",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
       doEffect: function(player, enemy){
           app.main.playerOnFire = !app.main.playerOnFire;
       }
@@ -1948,24 +2029,21 @@
       name: "Range Up",
       description: "shoot farther",
       radius: 20,
-      onGround: false,
-      active: false,
-      image: undefined,
-      beingUsed: false,
-      timeActive: 0,
       doEffect: function(player){
-          if(app.main.beingUsed == false){
-              app.main.timeActive = timerCall();
-              player.maxDistance += 20;
-              app.main.beingUsed = true;
-              app.main.active = false;
-              console.log("Range Up");
-          }else{
-              player.maxDistance -= 20;
-              app.main.beingUsed = false;
-              app.main.timeActive = 0;
-          }
-
+          player.maxDistance += 20;
+          console.log("Range Up");
+      }
+  };
+    
+  var FireRateUp = {
+      x: 0,
+      y: 0,
+      name: "Hot Clip",
+      description: "You Shoot Faster",
+      radius: 20,
+      doEffect: function(player){
+          player.fireRate *= 4/5;
+          console.log("FireRateUp");
       }
   };
 
@@ -1976,22 +2054,8 @@
       description: "larger bullets",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
-      beingUsed: false,
-      timeActive: 0,
       doEffect: function(player){
-          if(app.main.beingUsed == false){
-              app.main.timeActive = timerCall();
-              app.main.bulletSize += 1;
-              app.main.beingUsed = true;
-              app.main.active = false;
-              console.log("Bullet Up");
-          }else{
-              app.main.bulletSize -= 1;
-              app.main.beingUsed = false;
-              app.main.timeActive = 0;
-          }
+          player.bulletSize += 1;
       }
   };
 
@@ -2002,29 +2066,40 @@
       description: "enemies are hindered",
       radius: 20,
       onGround: false,
-      slowEnemy: true,
-      active: false,
-      image: undefined,
-      beingUsed: false,
-      timeActive: 0,
       doEffect: function(){
-          if(app.main.beingUsed == false){
-              app.main.timeActive = timerCall();
-              for(var i = 0; i < app.main.enemies.length; i++){
-                  var e = app.main.enemies[i];
-                  e.speed /= 2;
-              }
-              app.main.beingUsed = true;
-              app.main.active = false;
-              console.log("Slow Enemy");
-          }else{
-              for(var i = 0; i < app.main.enemies.length; i++){
-                  var e = app.main.enemies[i];
-                  e.speed *= 2;
-              }
-              app.main.beingUsed = false;
-              app.main.timeActive = 0;
+          for(var i = 0; i < app.main.enemies.length; i++){
+              var e = app.main.enemies[i];
+              e.speed = e.speed*(4/5);
           }
+          console.log("Slow Enemy");
+      }
+  };
+    
+  var SpeedUp = {
+      x: 0,
+      y: 0,
+      name: "Slow Enemy",
+      description: "enemies are hindered",
+      radius: 20,
+      onGround: false,
+      doEffect: function(player){
+          player.speed = player.speed*(5/4);
+          console.log("SpeedUp");
+      }
+  };
+    
+  var SpeedUpAll = {
+      x: 0,
+      y: 0,
+      name: "Slow Enemy",
+      description: "enemies are hindered",
+      radius: 20,
+      onGround: false,
+      doEffect: function(){
+          for (var p = 0; p < app.main.players.length; p++){
+              app.main.players[p].speed = app.main.players[p].speed*(5/4);
+            }
+          console.log("SpeedUpAllPlayers");
       }
   };
   //-----------Negative-----------
@@ -2032,13 +2107,9 @@
       x: 0,
       y: 0,
       name: "Enemies Spit Bullets",
-      description: "LOOKOUT",
+      description: "LOOKOUT!",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
-      beingUsed: false,
-      timeActive: 0,
       doEffect: function(player){
           app.main.eBullActive = true;
           app.main.eBullLethal = true;
@@ -2051,23 +2122,21 @@
       name: "Range Down",
       description: "shoot not so far",
       radius: 20,
-      onGround: false,
-      active: false,
-      image: undefined,
-      beingUsed: false,
-      timeActive: 0,
       doEffect: function(player){
-          if(app.main.beingUsed == false){
-              app.main.timeActive = timerCall();
-              player.maxDistance -= 20;
-              app.main.beingUsed = true;
-              app.main.active = false;
-              console.log("Range Down");
-          }else{
-              player.maxDistance += 20;
-              app.main.beingUsed = false;
-              app.main.timeActive = 0;
-          }
+          player.maxDistance -= 20;
+          console.log("Range Down");
+      }
+  };
+    
+  var FireRateDown = {
+      x: 0,
+      y: 0,
+      name: "Cold Trigger",
+      description: "You Shoot Slower",
+      radius: 20,
+      doEffect: function(player){
+          player.fireRate *= 5/4;
+          console.log("FireRateDown");
       }
   };
 
@@ -2077,32 +2146,15 @@
       name: "Slow Down",
       description: "everything gets slower",
       radius: 20,
-      onGround: false,
-      slowAll: true,
-      active: false,
-      image: undefined,
-      beingUsed: false,
-      timeActive: 0,
       doEffect: function(player){
-          if(app.main.beingUsed == false){
-              app.main.timeActive = timerCall();
-              for(var i = 0; i < app.main.enemies.length; i++){
-                  var e = app.main.enemies[i];
-                  e.speed /= 2;
-              }
-              player.speed /= 2;
-              app.main.beingUsed = true;
-              app.main.active = false;
-              console.log("Speed");
-          }else{	
-              for(var i = 0; i < app.main.enemies.length; i++){
-                  var e = app.main.enemies[i];
-                  e.speed *= 2;
-              }
-              player.speed *= 2;
-              app.main.beingUsed = false;
-              app.main.timeActive = 0;
-          }
+            for(var i = 0; i < app.main.enemies.length; i++){
+                var e = app.main.enemies[i];
+                e.speed = e.speed*(4/5);
+            }
+            for (var p = 0; p < app.main.players.length; p++){
+              app.main.players[p].speed = app.main.players[p].speed*(4/5);
+            }
+            console.log("Slow All");
       }
   };
 
@@ -2113,22 +2165,10 @@
       description: "smaller bullets",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
-      beingUsed: false,
       timeActive: 0,
       doEffect: function(player){
-          if(app.main.beingUsed == false){
-              app.main.timeActive = timerCall();
-              app.main.bulletSize -= 1;
-              console.log("Bullet Down");
-              app.main.beingUsed = true;
-              app.main.active = false;
-          }else{
-              app.main.bulletSize += 1;
-              app.main.beingUsed = false;
-              app.main.timeActive = 0;
-          }
+          app.main.bulletSize -= 1;
+          console.log("Bullet Down");
       }
   };
 
@@ -2140,39 +2180,9 @@
       description: "...nerf bullets",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
-      beingUsed: false,
-      timeActive: 0,
       doEffect: function(player){
           app.main.eBullActive = true;
           app.main.eBullLethal = false;
-      }
-  };
-
-  var NegativeColor = {
-      x: 0,
-      y: 0,
-      name: "Negative",
-      description: "what happened to the colors?",
-      radius: 20,
-      onGround: false,
-      active: false,
-      image: undefined,
-      beingUsed: false,
-      timeActive: 0,
-      doEffect: function(player){
-          if(app.main.beingUsed == false){
-              app.main.timeActive = timerCall();
-              app.main.invert = !app.main.invert;
-              console.log("Negative");
-              app.main.beingUsed = true;
-              app.main.active = false;
-          }else{
-              app.main.invert = app.main.invert;
-              app.main.beingUsed = false;
-              app.main.timeActive = 0;
-          }
       }
   };
 
@@ -2183,15 +2193,12 @@
       description: "David vs Goliaths",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
       doEffect: function(player){
           app.main.ENEMY_RADIUS+=4;
           for (var i = 0; i < app.main.enemies.length; i++){
               var e = app.main.enemies[i];
               e.radius = app.main.ENEMY_RADIUS;
           }
-          app.main.active = false;
           console.log("Enemy Size Up");
       }
   };
@@ -2203,10 +2210,11 @@
       description: "Goliath vs Davids",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
       doEffect: function(player){
           app.main.ENEMY_RADIUS-=4;
+          if(app.main.ENEMY_RADIUS < 1){
+            app.main.ENEMY_RADIUS = 1;
+          }
           for (var i = 0; i < app.main.enemies.length; i++){
               var e = app.main.enemies[i];
               e.radius = app.main.ENEMY_RADIUS;
@@ -2223,11 +2231,8 @@
       description: "stop eating so much",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
       doEffect: function(player){
           player.radius +=4;
-          app.main.active = false;
           console.log("Player Size Up");
       }
   };
@@ -2239,11 +2244,11 @@
       description: "you should eat more",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
       doEffect: function(player){
           player.radius -= 4;
-          app.main.active = false;
+          if(player.radius < 1){
+            player.radius = 1;
+          }
           console.log("Player Size Down");
       }
   };
@@ -2255,15 +2260,12 @@
       description: "is the room shrinking?",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
       doEffect: function(player){
           app.main.ENEMY_RADIUS+=4;
           for (var i = 0; i < app.main.enemies.length; i++){
               var e = app.main.enemies[i];
               e.radius = app.main.ENEMY_RADIUS;
           }
-          app.main.active = false;
           console.log("Everyone Size Up");
       }
   };
@@ -2277,15 +2279,19 @@
       description: "everything feels... bigger",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
       doEffect: function(player){
           app.main.ENEMY_RADIUS-=4;
+          if(app.main.ENEMY_RADIUS < 1){
+            app.main.ENEMY_RADIUS = 1;
+          }
+          player.radius -= 4;
+          if(player.radius < 1){
+            player.radius = 1;
+          }
           for (var i = 0; i < app.main.enemies.length; i++){
               var e = app.main.enemies[i];
               e.radius = app.main.ENEMY_RADIUS;
           }
-          app.main.active = false;
           console.log("Everyone Size Down");
       }
   };
@@ -2295,15 +2301,14 @@
   var HalfHealth = {
       x: 0,
       y: 0,
-      name: "Half Health",
-      description: "you're at half health",
+      name: "Raw Food",
+      description: "you may have not wanted this",
       radius: 20,
       onGround: false,
       active: false,
       image: undefined,
       doEffect: function(player){
           app.main.PLAYER.health = ((app.main.PLAYER.maxHealth)/2);
-          app.main.active = false;
           console.log("player at half health");
       }
   };
@@ -2311,14 +2316,11 @@
       x: 0,
       y: 0,
       name: "Full Health",
-      description: "you have full health",
+      description: "Stock up on these",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
       doEffect: function(player){
           app.main.PLAYER.health = app.main.PLAYER.maxHealth;
-          app.main.active = false;
           console.log("player at full health");
       }
   };
@@ -2327,14 +2329,12 @@
       x: 0,
       y: 0,
       name: "Health Up",
-      description: "more health",
+      description: "you feel... meatier",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
       doEffect: function(player){
-          app.main.PLAYER.maxHealth ++;
-          app.main.PLAYER.health ++;
+          app.main.PLAYER.maxHealth += 2;
+          app.main.PLAYER.health += 2;
           app.main.active = false;
           console.log("Max health increased, player slightly healed");
       }
@@ -2342,21 +2342,19 @@
   var HealthDown = {
       x: 0,
       y: 0,
-      name: "health down",
-      description: "you have less health",
+      name: "Food Poisoning",
+      description: "that was awful",
       radius: 20,
       onGround: false,
-      active: false,
-      image: undefined,
       doEffect: function(player){
-          app.main.PLAYER.maxHealth --;
-          app.main.PLAYER.health --;
+          app.main.PLAYER.maxHealth -= 2;
+          app.main.PLAYER.health -= 2;
           app.main.active = false;
           console.log("Max health decreased, player slightly damaged");
       }
   };
 
-  var myTemporaryItems = [OnFire, EnemyFiresBulletsLethal, EnemyFiresBulletsNonLethal, RangeUp, RangeDown, SlowEnemy, SlowAll, NegativeColor, BulletSizeDown, BulletSizeUp,EnemySizeUp,EnemySizeDown,PlayerSizeUp,PlayerSizeDown, EveryoneSizeUp, EveryoneSizeDown];
+  var myTemporaryItems = [OnFire, EnemyFiresBulletsLethal, EnemyFiresBulletsNonLethal, RangeUp, RangeDown, SlowEnemy, SlowAll, SpeedUp, SpeedUpAll, BulletSizeDown, FireRateDown, FireRateUp, BulletSizeUp, EnemySizeUp, EnemySizeDown, PlayerSizeUp, PlayerSizeDown, EveryoneSizeUp, EveryoneSizeDown];
 
   </script>
   
@@ -2411,17 +2409,6 @@
   });
 
   app.IMAGES = {
-      enemyImage:   "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/zombiesheet.png",
-      playerImage:  "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/playersheet.png",
-      deer:         "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/deer.png",
-      bear:         "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/bear.png",
-      bunny:        "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/bunny.png",
-      wolf:         "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/wolf.png",
-      pill :        "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/pill.png",
-      mushroom :    "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/mushroom.png",
-      flower1 :     "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/flower1.png",
-      flower2 :     "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/flower2.png",
-      plant :       "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/plant3.png",
       ground :      "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/grass.png"
   };
   </script>
