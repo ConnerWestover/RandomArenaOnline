@@ -86,7 +86,6 @@ const onSetupSockets = (sock) => {
       enemies: data.enemies,
       name: data.room,
     };
-
     socket.to(data.room).emit('PlayersReceiveGameInfo', info);
   });
 
@@ -104,7 +103,6 @@ const onSetupSockets = (sock) => {
 
 
   socket.on('GetGameRoomInfo', (room) => {
-    console.log(`Room name = ${room}`);
     const data = {
       numPlayers: roomNames[room].playerCount,
       playersFromLobby: roomNames[room].playersInLobby,

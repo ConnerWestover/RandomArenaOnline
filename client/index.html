@@ -174,7 +174,7 @@
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        fillText(ctx, "Down The Rabbit Hole",  WIDTH/2, 50, "50pt Permanent Marker", "red");
+        fillText(ctx, "Random Arena Online",  WIDTH/2, 50, "50pt Permanent Marker", "red");
         fillText(ctx, "Play",  WIDTH/2,  HEIGHT/8 + 30+  HEIGHT/11, "50pt Permanent Marker", "black");
         fillText(ctx, "Instructions",  WIDTH/2,  HEIGHT/6 + 30 +  HEIGHT/4 - 10, "50pt Permanent Marker", "black");
         fillText(ctx, "Options",  WIDTH/2,  HEIGHT*2/6 + 30 +  HEIGHT/4 + 5, "50pt Permanent Marker", "black");
@@ -224,7 +224,7 @@
 			ctx.lineWidth = 4;
 			fillText(ctx, "Back", 60, 30, "30pt Permanent Marker", "black");
 			fillText(ctx, "About",  WIDTH/2,  HEIGHT/8, "60pt Permanent Marker", "black");
-			fillText(ctx, "Down The Rabbit Hole was created by:",  WIDTH/2,  HEIGHT*2/5, "30pt Permanent Marker", "black");
+			fillText(ctx, "Random Arena Online was created by:",  WIDTH/2,  HEIGHT*2/5, "30pt Permanent Marker", "black");
 			fillText(ctx, "Alexander Huffman",  WIDTH/2,  HEIGHT*2/5+40, "30pt Permanent Marker", "black");
 			fillText(ctx, "Conner Westover",  WIDTH/2,  HEIGHT*2/5+80, "30pt Permanent Marker", "black");
 			ctx.strokeRect(0,0,130,60);
@@ -608,10 +608,12 @@
   app.main = {
       //  properties
     WIDTH : 1200,
-    HEIGHT: 800, 
+    HEIGHT: 900, 
 
     canvas: undefined, 
     ctx: undefined,
+    
+    intervalUpdateID: undefined, //used to killgame via window.clearInterval(app.main.intervalUpdateID);
 
     lastTime: 0, // used by calculateDeltaTime() 
     debug: true,
@@ -651,7 +653,7 @@
       playersDead: 0,
 
 
-      PLAYER: {
+      PLAYER: { //Default stats for player
           health: 10,
           attackPower: 5,
           defense: 1,
@@ -670,7 +672,7 @@
           },
       },
 
-      ENEMY: {
+      ENEMY: { //Default stats for Enemy
           health: 2,
           attackPower: 1,
           defense: 1,
@@ -685,7 +687,7 @@
           BEGIN : 0,
           DEFAULT : 1,
           ROUND_OVER : 2,
-          REPEAT_LEVEL : 3,
+          GAME_OVER : 3,
       },	
 
       //  Part II - #2,3,4
@@ -698,16 +700,17 @@
           console.log("app.main.init() called");
           // initialize properties
           //app.main.sound.playBGAudio();
+          app.main.makeSockets(app.main.socket); 
+        
           app.main.canvas = document.querySelector('canvas');
           app.main.canvas.width = app.main.WIDTH;
           app.main.canvas.height = app.main.HEIGHT;
           app.main.ctx = app.main.canvas.getContext('2d');
           app.main.totalScore = 0;
           app.main.gameState = 1;
-          //app.main.canvas.onmousedown = app.main.doMousedown.bind(this);
-          app.main.makeSockets(app.main.socket);  
+          //app.main.canvas.onmousedown = app.main.doMousedown.bind(this); 
           //app.main.socket.emit('GetGameRoomInfo', app.main.room);
-        
+          //app.main.update();
       },
     
       makeSockets: (sock) =>{
@@ -726,12 +729,11 @@
           for(var i = 0; i < app.main.numPlayers; i++){
               app.main.players[i] = app.main.makePlayer();
           }
-          console.log(app.main.players.length);
           app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
           app.main.reset();
 
-          window.setInterval(() => {
-            app.main.update()
+          app.main.intervalUpdateID = window.setInterval(() => {
+            app.main.update();
           }, 1000/60);
           
         });
@@ -743,8 +745,8 @@
           app.main.room = data.name;
           
           
-          window.setInterval(() => {
-            app.main.update()
+          app.main.intervalUpdateID = window.setInterval(() => {
+            app.main.update();
           }, 1000/60);
         });
         
@@ -789,6 +791,18 @@
           // - SERVER HERE -
           // - SEND RESET TO PARTY IF HOST
       },
+    
+      killGameResetData: function(){
+        this.totalScore = 0;
+        this.enemies = [];
+        this.players = [];
+        this.playersDead = 0;
+        this.roundScore = 0;
+        app.main.gameState = 1;
+        window.clearInterval(this.intervalUpdateID);
+        this.intervalUpdateID = undefined;
+        app.exitToMenu();
+      },
 
       // - EVERYONE -
       update: () => {
@@ -805,11 +819,12 @@
 
           //app.main.drawMain(app.main.ctx);
           //GamePlay Drawing Happens
-          if (app.main.gameState == app.main.GAME_STATE.DEFAULT || app.main.gameState == app.main.GAME_STATE.ROUND_OVER){
-              if(app.main.amHost == true){
+          if (app.main.gameState == app.main.GAME_STATE.DEFAULT || app.main.gameState == app.main.GAME_STATE.ROUND_OVER || app.main.gameState == app.main.GAME_STATE.GAME_OVER){
+              if(app.main.amHost == true){ //host update
                   app.main.moveEnemy(dt);
+                  app.main.checkTemporary();
+                  app.main.checkEnemiesDead();
                   app.main.checkForCollisions();
-              
 
                 //update everyone
                 if(app.main.eBullActive == true){
@@ -843,7 +858,7 @@
                 for (var p = 0; p < app.main.players.length; p++){
                   app.main.players[p].update(dt);
                 }
-              } else {
+              } else { //client update
                 var data = {
                   posX: false,
                   posY: false,
@@ -899,43 +914,34 @@
               if(app.main.gameState != app.main.GAME_STATE.ROUND_OVER){
                   app.main.drawOnGroundItems(app.main.ctx);
               }
-              app.main.drawPlayers(app.main.ctx);
               //draw things
               if (app.main.gameState == app.main.GAME_STATE.DEFAULT){
                   app.main.drawShadows(app.main.ctx);
                   app.main.drawEnemy(app.main.ctx);
-              }
+              } 
+              app.main.drawPlayers(app.main.ctx);
               //draw hud
               app.main.drawItemText(app.main.ctx);
               app.main.drawHUD(app.main.ctx);
-
-              // - HOST ONLY -
-              if(app.main.amHost){
-                  app.main.checkTemporary();
-                  app.main.checkEnemiesDead();
-                  app.main.socket.emit('HostUpdatesGameInfo', {
-                    players: app.main.players,
-                    playerCount: app.main.numPlayers,
-                    enemies: app.main.enemies,
-                    room: app.main.room,
-                  });
-              }
+    
           }
+      
 
-          if(app.main.gameState == app.main.GAME_STATE.ROUND_OVER){
-              app.main.drawHUD(app.main.ctx);
+        if(app.main.gameState == app.main.GAME_STATE.ROUND_OVER){
+            if(app.main.amHost == true){
+                if(myKeys.keydown[myKeys.KEYBOARD.KEY_SPACE]){
+                  app.main.gameState = app.main.GAME_STATE.DEFAULT;
+                    app.main.reset();
+                }
+            }
+        }
+        
+        if (app.main.gameState == app.main.GAME_STATE.GAME_OVER){
               if(myKeys.keydown[myKeys.KEYBOARD.KEY_SPACE]){
-                  if (app.main.players[0].health <= 0){
-                    //TODO: End Game Score kick to lobby
-                    //app.main.gameState = app.main.GAME_STATE.MAIN_MENU;
-                  } else {
-                      app.main.gameState = app.main.GAME_STATE.DEFAULT;
-                      if(app.main.amHost == true){
-                          app.main.reset();
-                      }
-                  }
+                app.main.killGameResetData();
               }
-          }
+        }
+        
         if(app.main.amHost){
           var info = {
             players: app.main.players,
@@ -975,7 +981,7 @@
           ctx.strokeStyle = "black";
           ctx.fillRect(5,5, 200, 40);
           ctx.fillStyle = "red";
-          //ctx.fillRect(5,5,200 * (app.main.PLAYER.health/app.main.PLAYER.maxHealth),40);
+          ctx.fillRect(5,5,200 * (app.main.players[app.main.playerIndex].health/app.main.players[app.main.playerIndex].maxHealth),40);
           ctx.strokeRect(5,5, 200, 40);
 
 
@@ -986,19 +992,20 @@
               app.main.fillText(app.main.ctx,"To begin, click the screen", app.main.WIDTH/2, app.main.HEIGHT/2, "30pt Permanent Marker", "white");
           } // end if
 
-          if(app.main.gameState == app.main.GAME_STATE.ROUND_OVER){
+          if(app.main.gameState == app.main.GAME_STATE.GAME_OVER){
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
-              if (app.main.PLAYER.health <= 0){
-                  app.main.fillText(app.main.ctx,"GAME OVER", app.main.WIDTH/2, app.main.HEIGHT/2 - 80, "50pt Permanent Marker", "red");
-                  app.main.fillText(app.main.ctx,"Your final score was: " + app.main.roundScore, app.main.WIDTH/2, app.main.HEIGHT/2 - 20, "30pt Permanent Marker", "black");
-                  app.main.fillText(app.main.ctx,"Press SPACE to return to Main Menu", app.main.WIDTH/2, app.main.HEIGHT/2 + 10, "30pt Permanent Marker", "black");
-              } else {
-                  app.main.fillText(app.main.ctx,"You have completed this round", app.main.WIDTH/2, app.main.HEIGHT/2 - 40, "30pt Permanent Marker", "black");
-                  app.main.fillText(app.main.ctx,"Press SPACE to continue", app.main.WIDTH/2, app.main.HEIGHT/2, "30pt Permanent Marker", "black");
-              }
-          } // end if
-
+              app.main.fillText(app.main.ctx,"GAME OVER", app.main.WIDTH/2, app.main.HEIGHT/2 - 80, "50pt Permanent Marker", "red");
+              app.main.fillText(app.main.ctx,"Your final score was: " + app.main.roundScore, app.main.WIDTH/2, app.main.HEIGHT/2 - 20, "30pt Permanent Marker", "black");
+              app.main.fillText(app.main.ctx,"Press SPACE to return to Main Menu", app.main.WIDTH/2, app.main.HEIGHT/2 + 10, "30pt Permanent Marker", "black");
+          } 
+          if(app.main.gameState == app.main.GAME_STATE.ROUND_OVER){
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            app.main.fillText(app.main.ctx,"You have completed this round", app.main.WIDTH/2, app.main.HEIGHT/2 - 40, "30pt Permanent Marker", "black");
+            app.main.fillText(app.main.ctx,"Press SPACE to continue", app.main.WIDTH/2, app.main.HEIGHT/2, "30pt Permanent Marker", "black");
+          }
+          
           ctx.restore(); // NEW
       },
     
@@ -1006,33 +1013,22 @@
         for (var p = 0; p < app.main.players.length; p++){
           ctx.save();
           var player = app.main.players[p];
-              if(this.image != undefined){
-                  ctx.fillStyle = "orange";
-                  ctx.fillRect(player.x - 16, player.y - 16, 32, 32);
+              if(player.image.src == undefined){
+                 ctx.fillStyle = "orange";
+                  ctx.fillRect(player.x, player.y, 32, 32);
               } else {
                   var halfW = player.radius;
                   var halfH = player.radius;
                   if(this.direction == 2){
-                      ctx.drawImage(player.image,				
-                      0 + player.spriteNumber * 32,64,32,32,		 					
-                      player.x- halfW, player.y- halfH, halfW*2, halfH*2
-                      );
+                      ctx.drawImage(player.image,0 + player.spriteNumber * 32,64,32,32, player.x- halfW, player.y- halfH, halfW*2, halfH*2);
                   } else if (player.direction == 3) {
-                      ctx.drawImage(player.image,				
-                      0 + player.spriteNumber * 32,32,32,32,		 					
-                      player.x- halfW, player.y- halfH, halfW*2, halfH*2
-                      );
+                      ctx.drawImage(player.image,0 + player.spriteNumber * 32,32,32,32,player.x- halfW, player.y- halfH, halfW*2, halfH*2);
                   } else if(player.direction == 1){
-                      ctx.drawImage(player.image,				
-                      0 + player.spriteNumber * 32,1,32,31,		 					
-                      player.x- halfW, player.y- halfH, halfW*2, halfH*2
-                      );	
+                      ctx.drawImage(player.image,0 + player.spriteNumber * 32,1,32,31,player.x- halfW, player.y- halfH, halfW*2, halfH*2);	
                   } else {
-                      ctx.drawImage(player.image,					 					
-                      0 + player.spriteNumber * 32,96,32,32,		 					
-                      player.x- halfW, player.y- halfH, halfW*2, halfH*2
-                      );
+                      ctx.drawImage(player.image,0 + player.spriteNumber * 32,96,32,32,player.x- halfW, player.y- halfH, halfW*2, halfH*2);
                   }
+                
               }
               ctx.restore();
 
@@ -1243,6 +1239,7 @@
 		p.direction = 0; // 0 = up, 1 = down, 2 = right, 3 = left
 			
 		var image = new Image();
+     
 		image.src = app.IMAGES['playerImage'];
 			
 		p.image = image;
@@ -1324,9 +1321,19 @@
 				this.bullets[i].move(dt);
 				if(this.bullets[i].live == false) this.bullets.splice(i, 1);
 			}
-		
-			this.xSpeed = app.main.PLAYER.x - this.x;
-			this.ySpeed = app.main.PLAYER.y - this.y;
+		    
+            var closestIndex = 0;
+            var smallestNumber = 100000;
+            for (var i = 0; i < app.main.players.length; i++){
+              var tempNum = this.x - app.main.players[i].x + this.y - app.main.players[i].y
+              if (tempNum < smallestNumber){
+                closestIndex = i;
+                smallestNumber = tempNum;
+              }
+            }
+          
+			this.xSpeed = app.main.players[closestIndex].x - this.x;
+			this.ySpeed = app.main.players[closestIndex].y - this.y;
 			
 			var mag = Math.sqrt(this.xSpeed*this.xSpeed + this.ySpeed*this.ySpeed);
 			this.xSpeed /= mag;
@@ -1450,7 +1457,7 @@
 
               if(e.started == true && e.alive == true){
                   ctx.save();
-                  if(!this.image) {
+                  if(this.image == undefined) {
                       ctx.fillStyle = "orange";
                       ctx.fillRect(e.x, e.y, 32, 32);
                   } else {
@@ -1559,33 +1566,34 @@
           // - SERVER HERE -
           // - SEND GAME STATE CHANGE IF ROUND OVER TO PARTY -
 
-          for (var p = 0; p < app.main.players.length; p++){
+          for (var p = 0; p < app.main.players.length; p++){ //player for loop
             var player = app.main.players[p];
-              for (var j = 0; j < app.main.enemies.length; j++){
+            
+              for (var j = 0; j < app.main.enemies.length; j++){ // enemy for loop
+                
                   if (app.main.enemies[j].alive == false) continue; // if enemy isn't alive disregard
                   if (app.main.enemies[j].started == false) continue; // if enemy isn't started disregard
-                  if (!player.gotHit && 
-                      Math.abs(player.x - app.main.enemies[j].x) < player.radius + app.main.enemies[j].radius &&
-                      Math.abs(player.y - app.main.enemies[j].y) < player.radius + app.main.enemies[j].radius){
-                          player.health -= app.main.enemies[j].attackPower; //decrement health
-                              if (app.main.enemies[j].health <= 0){
-                                  app.main.enemies[j].alive = false;
-                              }
+                
+                  //Check for player/enemy collision
+                  if (!player.gotHit && Math.abs(player.x - app.main.enemies[j].x) < player.radius + app.main.enemies[j].radius && Math.abs(player.y - app.main.enemies[j].y) < player.radius + app.main.enemies[j].radius){
+                      player.health -= app.main.enemies[j].attackPower; //decrement health
+                    
+                      //app.main.sound.playPlayerHurtEffect();
+                      if(player.health <= 0){ //make sure health can't go negative and sets round to over
+                          player.health = 0;
+                          app.main.playersDead++;
+                          if(app.main.playersDead - 1 == app.main.players.length){
+                              app.main.roundScore = app.main.totalScore;
+                              app.main.gameState = app.main.GAME_STATE.GAME_OVER;
                           }
-                          //app.main.sound.playPlayerHurtEffect();
-                          if(player.health <= 0){ //make sure health can't go negative and sets round to over
-                              player.health = 0;
-                              playersDead ++;
-                              if(playersDead == app.main.players.length){
-                                  app.main.roundScore = app.main.totalScore;
-                                  app.main.gameState = app.main.GAME_STATE.ROUND_OVER;
-                              }
-                          }
-                          var d = new Date();
-                          player.timeGotHit = d.getTime();
-                          player.gotHit = true;
+                      }
+                      var d = new Date();
+                      player.timeGotHit = d.getTime();
+                      player.gotHit = true;
+                  }
+                
                   if(app.main.eBullActive == true){
-                      for(var i = 0; i < app.main.enemies[j].bullets.length; i++){
+                      for(var i = 0; i < app.main.enemies[j].bullets.length; i++){ // enemy bullet for loop
                           var b = app.main.enemies[j].bullets[i];
                           if (Math.abs(b.x - player.x) < b.radius + player.radius && Math.abs(b.y - player.y) < b.radius + player.radius){
                               b.live = false;
@@ -1593,10 +1601,10 @@
                                   player.health -= 1;
                                   if(player.health <= 0){ //make sure health can't go negative and sets round to over
                                       player.health = 0;
-                                      playersDead ++;
-                                      if(playersDead == app.main.players.length){
+                                      app.main.playersDead++;
+                                      if(app.main.playersDead - 1 == app.main.players.length){
                                           app.main.roundScore = app.main.totalScore;
-                                          app.main.gameState = app.main.GAME_STATE.ROUND_OVER;
+                                          app.main.gameState = app.main.GAME_STATE.GAME_OVER;
                                       }
                                   }
                                   var d = new Date();
@@ -1604,47 +1612,51 @@
                                   player.gotHit = true;
                               }
                           }
+                      } // end enemy bullet for loop
+                  }
+                
+              } // end enemy for loop
+              for (var i = 0; i < player.bullets.length; i++){
+                for (var j = 0; j < app.main.enemies.length; j++){
+                  var e = app.main.enemies[j];
+                  var b = player.bullets[i];
+                  if(e.alive) {
+                    if (Math.abs(b.x - e.x) < b.radius + e.radius && Math.abs(b.y - e.y) < b.radius +     e.radius){
+                        e.health -= b.power;
+                        //app.main.sound.playEnemyHurtEffect();
+                        b.live = false;
+                        if(e.health <= 0){
+                            e.alive = false;
+                            app.main.totalScore = app.main.totalScore + 1;
+                            if(getRandom(0,100) > 40){
+                                var x = Math.floor(getRandom(0, myTemporaryItems.length));
+                                app.main.makeActiveItem(x, e.x,e.y);								
+                            }
+                        }
+                     }
+                  }
+                }
+              }//bullet loop
+
+              //ITEMS
+              for (var i = 0; i < app.main.itemsOnGround.length; i++){
+                  if (Math.abs(player.x - app.main.itemsOnGround[i].x) < player.radius + app.main.itemsOnGround[i].radius &&
+                      Math.abs(player.y - app.main.itemsOnGround[i].y) < player.radius + app.main.itemsOnGround[i].radius){
+                      if(app.main.itemsOnGround[i].active != true && app.main.itemsOnGround[i].onGround == true){
+                          app.main.itemsOnGround[i].onGround = false;
+                          app.main.itemsOnGround[i].doEffect(player);
+
+                          app.main.itemText = app.main.itemsOnGround[i].name;
+                          app.main.descriptionText = app.main.itemsOnGround[i].description;
+                          var d = new Date();
+                          app.main.timePutOnScreen = d.getTime();
+                      } else {
+                          app.main.itemsOnGround.splice(i, 1);
                       }
                   }
               }
-                  for (var i = 0; i < player.bullets.length; i++){
-                    for (var j = 0; j <app.main.enemies.length; j++){
-                      var e = app.main.enemies[j];
-                      var b = player.bullets[i];
-                      if (Math.abs(b.x - e.x) < b.radius + e.radius && Math.abs(b.y - e.y) < b.radius + e.radius){
-                          e.health -= b.power;
-                          //app.main.sound.playEnemyHurtEffect();
-                          b.live = false;
-                          if(e.health <= 0){
-                              e.alive = false;
-                              app.main.totalScore = app.main.totalScore + 1;
-                              if(getRandom(0,100) > 40){
-                                  var x = Math.floor(getRandom(0, myTemporaryItems.length));
-                                  app.main.makeActiveItem(x, e.x,e.y);								
-                              }
-                          }
-                      }
-                    }
-                  }
 
-                  //ITEMS
-                  for (var i = 0; i < app.main.itemsOnGround.length; i++){
-                      if (Math.abs(player.x - app.main.itemsOnGround[i].x) < player.radius + app.main.itemsOnGround[i].radius &&
-                          Math.abs(player.y - app.main.itemsOnGround[i].y) < player.radius + app.main.itemsOnGround[i].radius){
-                          if(app.main.itemsOnGround[i].active != true && app.main.itemsOnGround[i].onGround == true){
-                              app.main.itemsOnGround[i].onGround = false;
-                              app.main.itemsOnGround[i].doEffect(app.main.PLAYER);
-
-                              app.main.itemText = app.main.itemsOnGround[i].name;
-                              app.main.descriptionText = app.main.itemsOnGround[i].description;
-                              var d = new Date();
-                              app.main.timePutOnScreen = d.getTime();
-                          } else {
-                              app.main.itemsOnGround.splice(i, 1);
-                          }
-                      }
-                  }
-              }
+            }//End of player for loop
           },
 
       // - HOST ONLY - 
@@ -1743,11 +1755,25 @@
 
       console.log("images loaded called");
       app.sound.init();
+      app.exitToMenu = () => {
+        state = MenuState.MAIN_MENU;
+        ctx.canvas.width  = window.innerWidth - 20;
+        ctx.canvas.height = window.innerHeight - 20;
+        WIDTH = window.innerWidth - 20;
+        HEIGHT = window.innerHeight - 20;
+        update();
+      };      
       app.main.socket = socket;
       app.main.sound = app.sound;
       app.main.Emitter = app.Emitter;
       app.main.init();
       app.main.room = room;
+    
+      if(host){
+        app.main.playerIndex = 0;
+        socket.emit('GetGameRoomInfo', room);
+      }
+    
       if(playersInLobby[1] != undefined){
         if(playersInLobby[1].username == username){
           app.main.playerIndex = 1;
@@ -1762,10 +1788,6 @@
           if(playersInLobby[3].username == username){
             app.main.playerIndex = 3;
           }
-      }
-      if(host){
-        app.main.index = 0;
-        socket.emit('GetGameRoomInfo', room);
       }
 
      /*app.queue.loadManifest([
@@ -2275,18 +2297,18 @@
   });
 
   app.IMAGES = {
-      enemyImage: "media/zombiesheet.png",
-      playerImage: "media/playersheet.png",
-      deer: "media/deer.png",
-      bear: "media/bear.png",
-      bunny: "media/bunny.png",
-      wolf: "media/wolf.png",
-      pill : "media/pill.png",
-      mushroom : "media/mushroom.png",
-      flower1 : "media/flower1.png",
-      flower2 : "media/flower2.png",
-      plant : "media/plant3.png",
-      ground : "media/grass.png"
+      enemyImage: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/zombiesheet.png",
+      playerImage: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/playersheet.png",
+      deer: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/deer.png",
+      bear: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/bear.png",
+      bunny: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/bunny.png",
+      wolf: "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/wolf.png",
+      pill : "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/pill.png",
+      mushroom : "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/mushroom.png",
+      flower1 : "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/flower1.png",
+      flower2 : "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/flower2.png",
+      plant : "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/plant3.png",
+      ground : "http://www.connerwestover.ismakinggames.com/DownTheRabbitHole/media/grass.png"
   };
   </script>
   
