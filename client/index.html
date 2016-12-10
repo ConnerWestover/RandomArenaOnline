@@ -814,6 +814,8 @@
           app.main.totalScore = data.score;
           app.main.gameState = data.state;
           app.main.itemsOnGround = data.items;
+          app.main.timePutOnScreen = data.itemTime;
+          app.main.itemText = data.itemText;
           
           app.main.update();
         });
@@ -1030,6 +1032,8 @@
             score: app.main.totalScore,
             state: app.main.gameState,
             items: app.main.itemsOnGround,
+            itemTime: app.main.timePutOnScreen,
+            itemText: app.main.itemText
           };
           socket.emit('HostUpdatesGameInfo', info);
         }
