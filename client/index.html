@@ -1108,37 +1108,39 @@
           var player = app.main.players[p];
           if(player.alive == false) continue;
           ctx.save();
-              if(app.main.IMAGES.player == undefined){
-                 ctx.fillStyle = "orange";
-                  ctx.fillRect(player.x, player.y, 32, 32);
+          if(app.main.IMAGES.player == undefined){
+             ctx.fillStyle = "orange";
+             ctx.fillRect(player.x, player.y, 32, 32);
+          } else {
+              var halfW = player.radius;
+              var halfH = player.radius;
+              var spriteP = 96 * p;
+              if (player.direction == 2){
+                  ctx.drawImage(app.main.IMAGES.player, spriteP + player.spriteNumber * 32,64,32,32, player.x- halfW, player.y- halfH, halfW*2, halfH*2);
+              } else if (player.direction == 3) {
+                  ctx.drawImage(app.main.IMAGES.player,spriteP + player.spriteNumber * 32,32,32,32,player.x- halfW, player.y- halfH, halfW*2, halfH*2);
+              } else if(player.direction == 1){
+                  ctx.drawImage(app.main.IMAGES.player,spriteP + player.spriteNumber * 32,1,32,31,player.x- halfW, player.y- halfH, halfW*2, halfH*2);	
               } else {
-                  var halfW = player.radius;
-                  var halfH = player.radius;
-                  var spriteP = 96 * p;
-                  if (player.direction == 2){
-                      ctx.drawImage(app.main.IMAGES.player, spriteP + player.spriteNumber * 32,64,32,32, player.x- halfW, player.y- halfH, halfW*2, halfH*2);
-                  } else if (player.direction == 3) {
-                      ctx.drawImage(app.main.IMAGES.player,spriteP + player.spriteNumber * 32,32,32,32,player.x- halfW, player.y- halfH, halfW*2, halfH*2);
-                  } else if(player.direction == 1){
-                      ctx.drawImage(app.main.IMAGES.player,spriteP + player.spriteNumber * 32,1,32,31,player.x- halfW, player.y- halfH, halfW*2, halfH*2);	
-                  } else {
-                      ctx.drawImage(app.main.IMAGES.player,spriteP + player.spriteNumber * 32,96,32,32,player.x- halfW, player.y- halfH, halfW*2, halfH*2);
-                  }
+                  ctx.drawImage(app.main.IMAGES.player,spriteP + player.spriteNumber * 32,96,32,32,player.x- halfW, player.y- halfH, halfW*2, halfH*2);
               }
-              ctx.restore();
-
-              for (var i = 0; i < player.bullets.length; i++){
-                var bullet = player.bullets[i];
-                ctx.save();
-				ctx.fillStyle = "red";
-				ctx.strokeStyle = "black";
-				ctx.beginPath();
-				ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI*2, false);
-				ctx.closePath();
-				ctx.fill();
-				ctx.stroke();
-				ctx.restore();
-              }
+							if(player.reload == true){// draw R over player head if player reloadng
+								app.main.fillText(ctx, "R", player.x + player.halfW, player.y + player.radius, "20pt Permanent Marker", "black");
+							}
+          }
+          ctx.restore();
+          for (var i = 0; i < player.bullets.length; i++){
+            var bullet = player.bullets[i];
+            ctx.save();
+						ctx.fillStyle = "red";
+						ctx.strokeStyle = "black";
+						ctx.beginPath();
+						ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI*2, false);
+						ctx.closePath();
+						ctx.fill();
+						ctx.stroke();
+						ctx.restore();
+          }
         }
       },
     
@@ -1195,8 +1197,8 @@
       },
 
       // - HOST ONLY -
-      makePlayer: function(startingClass, name){
-        console.log(name);
+    makePlayer: function(startingClass, name){
+    console.log(name);
 		var makeBullet = function(x,y,xSpeed, ySpeed, maxDistance){
 			var move = function(dt){
 				this.x += this.xSpeed;
@@ -1215,10 +1217,20 @@
 			b.power = 1;
 			b.x = this.x;
 			b.y = this.y;
-			b.radius = app.main.bulletSize;
+			b.bulletClass = startingClass;
+			if(startingClass == 0){
+				b.radius = 10;
+				b.power = 5;
+			}else if (startingClass == 1){
+				b.radius = 5;
+				b.power = 1;
+			}else{
+				b.radius = 8
+				b.power = 2;
+			}
 			b.xSpeed = xSpeed;
 			b.ySpeed = ySpeed;
-			b.live = true
+			b.live = true;
 			b.move = move;
 			
 			return b;
@@ -1227,33 +1239,81 @@
 		var fireU = function(){
 			var d = new Date();
 			this.direction = 0;
-			if (this.bullets.length < p.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
-				this.bullets.push(this.makeBullet(this.x,this.y,0,-5,this.maxDistance));
-				this.timeLastFired = d.getTime();
+			if(this.reload == false){ //is player reloading - no
+				if (this.bullets.length < this.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){ // no more bullets on screen then maximum bullet count - throttle bullet fire rate
+					if(this.bulletsFired < this.maxBullets){ //if player hasn't emptied magazine
+						this.bullets.push(this.makeBullet(this.x,this.y,0,-5,this.maxDistance));
+						this.bulletsFired ++;
+					}else{ //if player has emptied magazine
+						this.reload = true;
+						this.bulletsFired = 0;
+					}
+					this.timeLastFired = d.getTime();
+				}
+			}else{ //is player reloading - yes
+				if((d.getTime() - this.timeLastFired) > (this.fireRate + this.reloadTime)){ //wait for reload
+					this.reload = false;
+				}
 			}
 		};
 		var fireD = function(){
 			var d = new Date();
 			this.direction = 1;
-			if (this.bullets.length < p.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
-				this.bullets.push(this.makeBullet(this.x,this.y,0,5,this.maxDistance));
-				this.timeLastFired = d.getTime();
+			if(this.reload == false){
+				if (this.bullets.length < this.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
+					if(this.bulletsFired < this.maxBullets){
+						this.bullets.push(this.makeBullet(this.x,this.y,0,5,this.maxDistance));
+						this.bulletsFired ++;
+					}else{
+						this.reload = true;
+						this.bulletsFired = 0;
+					}
+					this.timeLastFired = d.getTime();
+				}
+			}else{
+				if((d.getTime() - this.timeLastFired) > (this.fireRate + this.reloadTime)){
+					this.reload = false;
+				}
 			}
 		};
 		var fireL = function(){
 			var d = new Date();
 			this.direction = 3;
-			if (this.bullets.length < p.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
-				this.bullets.push(this.makeBullet(this.x,this.y,-5,0,this.maxDistance));
-				this.timeLastFired = d.getTime();
+			if(this.reload == false){
+				if (this.bullets.length < this.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
+					if(this.bulletsFired < this.maxBullets){
+						this.bullets.push(this.makeBullet(this.x,this.y,-5,0,this.maxDistance));
+						this.bulletsFired ++;
+					}else{
+						this.reload = true;
+						this.bulletsFired = 0;
+					}
+					this.timeLastFired = d.getTime();
+				}
+			}else{
+				if((d.getTime() - this.timeLastFired) > (this.fireRate + this.reloadTime)){
+					this.reload = false;
+				}
 			}
 		};
 		var fireR = function(){
 			var d = new Date();
 			this.direction = 2;
-			if (this.bullets.length < p.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
-				this.bullets.push(this.makeBullet(this.x,this.y,5,0,this.maxDistance));
-				this.timeLastFired = d.getTime();
+			if(this.reload == false){
+				if (this.bullets.length < this.maxBullets && d.getTime() - this.timeLastFired > this.fireRate){
+					if(this.bulletsFired < this.maxBullets){
+						this.bullets.push(this.makeBullet(this.x,this.y,5,0,this.maxDistance));
+						this.bulletsFired ++;
+					}else{
+						this.reload = true;
+						this.bulletsFired = 0;
+					}
+					this.timeLastFired = d.getTime();
+				}
+			}else{
+				if((d.getTime() - this.timeLastFired) > (this.fireRate + this.reloadTime)){
+					this.reload = false;
+				}
 			}
 		};
 		
@@ -1306,7 +1366,7 @@
 		
 		var p = {};
 		
-        p.startingClass = startingClass;
+    p.startingClass = startingClass;
 		p.x = this.WIDTH/2;
 		p.y = this.HEIGHT/2;
 		p.moveX = movePlayerX;
@@ -1316,6 +1376,8 @@
 		p.bullets = [];
 		p.makeBullet = makeBullet;
 		p.bulletsFired = 0;
+		p.reload = false;
+		p.reloadTime = 1500;
 		p.fireUp = fireU;
 		p.fireDown = fireD;
 		p.fireLeft = fireL;
@@ -1325,41 +1387,38 @@
 		p.timeGotHit = 0;
 		p.timeLastFired = 0;
 		p.maxDistance = 600;
-        p.alive = true;
-        p.name = name;
+    p.alive = true;
+    p.name = name;
 		
 		//Sprite resources
 		p.timeLastSpriteChanged = 0;
 		p.spriteNumber = 0;
 		p.direction = 0; // 0 = up, 1 = down, 2 = right, 3 = left
         
-        if (p.startingClass == 0){
+    if (p.startingClass == 0){
 			p.weapon = "shotgun";
 			p.speed = 100;
 			p.health = 12;
 			p.maxHealth = 12;
-			p.attackPower = 5;
 			p.maxBullets = 2;
 			p.fireRate = 800;
-			p.reloadTime = 500;
+			//p.reloadTime = 500;
 		}else if (p.startingClass == 1){
 			p.weapon = "pistol";
 			p.speed = 200;
 			p.health = 10;
 			p.maxHealth = 10;
-			p.attackPower = 1;
 			p.maxBullets = 10;
 			p.fireRate = 500;
-			p.reloadTime = 300;
+			//p.reloadTime = 300;
 		}else{
 			p.weapon = "rifle";
 			p.speed = 150
 			p.health = 8;
 			p.maxHealth = 8;
-			p.attackPower = 2;
 			p.maxBullets = 8;
 			p.fireRate = 1000;
-			p.reloadTime = 400;
+			//p.reloadTime = 400;
 		}
 			
 		var image = new Image();
