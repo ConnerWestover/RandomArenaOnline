@@ -510,13 +510,12 @@
                                             });
           }
         }
-     else if (state == MenuState.LOBBY_FINDING){
-       
-     }
         else if (state >= 8){
+          console.dir(state);
           //WIDTH*11/16, HEIGHT*((2 * i) + 1)/10 + HEIGHT*1/40, WIDTH/16, HEIGHT*2/20
           if(mouse.y > HEIGHT*((2 * index) + 1)/10 + HEIGHT*1/40 && mouse.y < HEIGHT*((2 * index) + 1)/10 + HEIGHT*3/40){
             if(mouse.x > WIDTH*11/16 && mouse.x < WIDTH*12/16){
+              console.log('valid S');
               startingClass = 1;
               ready = true;
               playersInLobby[index] = {
@@ -626,7 +625,7 @@
     WIDTH : 1080,
     HEIGHT: 810, 
     
-    ACTUALHEIGHT: 870,
+    ACTUALHEIGHT: 910,
 
     canvas: undefined, 
     ctx: undefined,
@@ -668,7 +667,6 @@
       playerIndex: 0,
       numPlayers: 1,
       players: [],
-      playersDead: 0,
 
 
       PLAYER: { //Default stats for player
@@ -788,8 +786,8 @@
           var startingClass = [];
           var names = [];
           for (var j = 0; j < data.playersFromLobby.length; j++){
-            startingClass.append(data.playersFromLobby[i].startingClass);
-            names.append(data.playersFromLobby[i].username);
+            startingClass[j] = (data.playersFromLobby[j].startingClass);
+            names[j] = (data.playersFromLobby[j].username);
           }
           
           app.main.amHost = true;
@@ -869,7 +867,6 @@
         this.totalScore = 0;
         this.enemies = [];
         this.players = [];
-        this.playersDead = 0;
         this.roundScore = 0;
         window.clearInterval(this.intervalUpdateID);
         this.intervalUpdateID = undefined;
@@ -899,6 +896,8 @@
                   app.main.checkTemporary();
                   app.main.checkEnemiesDead();
                   app.main.checkForCollisions();
+                
+                
 
                 //update everyone
                 if(app.main.eBullActive == true){
@@ -928,9 +927,17 @@
                 if (myKeys.keydown[myKeys.KEYBOARD.KEY_RIGHT]){
                     app.main.players[0].fireRight();
                 }
-
+                
+                var deadCount = 0;
                 for (var p = 0; p < app.main.players.length; p++){
                   app.main.players[p].update(dt);
+                  if (app.main.players[p].alive == false){
+                    deadCount++;
+                  }
+                }
+                if( deadCount == app.main.players.length){
+                  app.main.roundScore = app.main.totalScore;
+                  app.main.gameState = app.main.GAME_STATE.GAME_OVER;
                 }
               } else { //client update
                 var data = {
@@ -1044,10 +1051,6 @@
 
       // - EVERYONE -
       drawHUD: function(ctx){
-
-          // - SERVER HERE -
-          // - SEND SCORE IF HOST -
-          
           ctx.save();
           // draw score
           // fillText(app.main.ctx,string, x, y, css, color)
@@ -1058,12 +1061,20 @@
         
           for (var p = 0; p < app.main.players.length; p++){
             var player = app.main.players[p];
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";  
             ctx.strokeStyle = "black";
             ctx.fillStyle = "white";
-            ctx.fillRect(5 + (220 * p),5 + app.main.HEIGHT, 200, 40);
+            ctx.fillRect(40 + (270 * p),5 + app.main.HEIGHT, 200, 40);
             ctx.fillStyle = "red";
-            ctx.fillRect(5 + (220 * p), 5 + app.main.HEIGHT,200 * (player.health/player.maxHealth),40);
-            ctx.strokeRect(5 + (220 * p),5 + app.main.HEIGHT, 200, 40); 
+            ctx.fillRect(40 + (270 * p), 5 + app.main.HEIGHT,200 * (player.health/player.maxHealth),40);
+            ctx.strokeRect(40 + (270 * p),5 + app.main.HEIGHT, 200, 40);
+            if(p == 0) {ctx.fillStyle = "black";}
+            if(p == 1) {ctx.fillStyle = "blue";}
+            if(p == 2) {ctx.fillStyle = "red";}
+            if(p == 3) {ctx.fillStyle = "green";}
+            ctx.font = "40pt Permanent Marker";
+            ctx.fillText(player.name, 140 + (270 * p), 60 + app.main.HEIGHT, 200);
           }  
           if(app.main.gameState == app.main.GAME_STATE.BEGIN){
               ctx.textAlign = "center";
@@ -1094,8 +1105,9 @@
     
       drawPlayers: function(ctx){
         for (var p = 0; p < app.main.players.length; p++){
-          ctx.save();
           var player = app.main.players[p];
+          if(player.alive == false) continue;
+          ctx.save();
               if(app.main.IMAGES.player == undefined){
                  ctx.fillStyle = "orange";
                   ctx.fillRect(player.x, player.y, 32, 32);
@@ -1184,6 +1196,7 @@
 
       // - HOST ONLY -
       makePlayer: function(startingClass, name){
+        console.log(name);
 		var makeBullet = function(x,y,xSpeed, ySpeed, maxDistance){
 			var move = function(dt){
 				this.x += this.xSpeed;
@@ -1293,7 +1306,34 @@
 		
 		var p = {};
 		
-		if (p.startingClass == 0){
+        p.startingClass = startingClass;
+		p.x = this.WIDTH/2;
+		p.y = this.HEIGHT/2;
+		p.moveX = movePlayerX;
+		p.moveY = movePlayerY;
+		p.defense = 1;
+		p.radius = 18;
+		p.bullets = [];
+		p.makeBullet = makeBullet;
+		p.bulletsFired = 0;
+		p.fireUp = fireU;
+		p.fireDown = fireD;
+		p.fireLeft = fireL;
+		p.fireRight = fireR;
+		p.update = update;
+		p.gotHit = false;
+		p.timeGotHit = 0;
+		p.timeLastFired = 0;
+		p.maxDistance = 600;
+        p.alive = true;
+        p.name = name;
+		
+		//Sprite resources
+		p.timeLastSpriteChanged = 0;
+		p.spriteNumber = 0;
+		p.direction = 0; // 0 = up, 1 = down, 2 = right, 3 = left
+        
+        if (p.startingClass == 0){
 			p.weapon = "shotgun";
 			p.speed = 100;
 			p.health = 12;
@@ -1321,33 +1361,6 @@
 			p.fireRate = 1000;
 			p.reloadTime = 400;
 		}
-		
-		
-		p.x = this.WIDTH/2;
-		p.y = this.HEIGHT/2;
-		p.moveX = movePlayerX;
-		p.moveY = movePlayerY;
-		p.defense = 1;
-		p.radius = 18;
-		p.bullets = [];
-		p.makeBullet = makeBullet;
-		p.bulletsFired = 0;
-		p.fireUp = fireU;
-		p.fireDown = fireD;
-		p.fireLeft = fireL;
-		p.fireRight = fireR;
-		p.update = update;
-		p.gotHit = false;
-		p.timeGotHit = 0;
-		p.timeLastFired = 0;
-		p.maxDistance = 600;
-        
-        p.name = name;
-		
-		//Sprite resources
-		p.timeLastSpriteChanged = 0;
-		p.spriteNumber = 0;
-		p.direction = 0; // 0 = up, 1 = down, 2 = right, 3 = left
 			
 		var image = new Image();
      
@@ -1436,7 +1449,8 @@
             var closestIndex = 0;
             var smallestNumber = 100000;
             for (var i = 0; i < app.main.players.length; i++){
-              var tempNum = (this.x - app.main.players[i].x) + (this.y - app.main.players[i].y);
+              if(app.main.players[i].alive == false) continue;
+              var tempNum = Math.sqrt(Math.pow((this.x - app.main.players[i].x), 2) + Math.pow((this.y - app.main.players[i].y),2));
               if (tempNum < smallestNumber){
                 closestIndex = i;
                 smallestNumber = tempNum;
@@ -1664,14 +1678,13 @@
       checkForCollisions: function(){
           // - SERVER HERE -
           // - SEND GAME STATE CHANGE IF ROUND OVER TO PARTY -
-
           for (var p = 0; p < app.main.players.length; p++){ //player for loop
             var player = app.main.players[p];
-            
               for (var j = 0; j < app.main.enemies.length; j++){ // enemy for loop
                 
                   if (app.main.enemies[j].alive == false) continue; // if enemy isn't alive disregard
                   if (app.main.enemies[j].started == false) continue; // if enemy isn't started disregard
+                  if (player.alive == false) continue; // if player isn't alive
                 
                   //Check for player/enemy collision
                   if (!player.gotHit && Math.abs(player.x - app.main.enemies[j].x) < player.radius + app.main.enemies[j].radius && Math.abs(player.y - app.main.enemies[j].y) < player.radius + app.main.enemies[j].radius){
@@ -1680,11 +1693,7 @@
                       //app.main.sound.playPlayerHurtEffect();
                       if(player.health <= 0){ //make sure health can't go negative and sets round to over
                           player.health = 0;
-                          app.main.playersDead++;
-                          if(app.main.playersDead - 1 == app.main.players.length){
-                              app.main.roundScore = app.main.totalScore;
-                              app.main.gameState = app.main.GAME_STATE.GAME_OVER;
-                          }
+                          player.alive = false;
                       }
                       var d = new Date();
                       player.timeGotHit = d.getTime();
@@ -1700,11 +1709,7 @@
                                   player.health -= 1;
                                   if(player.health <= 0){ //make sure health can't go negative and sets round to over
                                       player.health = 0;
-                                      app.main.playersDead++;
-                                      if(app.main.playersDead - 1 == app.main.players.length){
-                                          app.main.roundScore = app.main.totalScore;
-                                          app.main.gameState = app.main.GAME_STATE.GAME_OVER;
-                                      }
+                                    player.alive = false;
                                   }
                                   var d = new Date();
                                   player.timeGotHit = d.getTime();
@@ -1863,6 +1868,7 @@
       app.sound.init();
       app.exitToMenu = () => {
         state = MenuState.MAIN_MENU;
+        playersInLobby = [];
         ctx.canvas.width  = window.innerWidth - 20;
         ctx.canvas.height = window.innerHeight - 20;
         WIDTH = window.innerWidth - 20;

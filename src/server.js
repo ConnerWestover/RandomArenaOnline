@@ -57,7 +57,6 @@ const onSetupSockets = (sock) => {
     } else if (roomNames[data.name].playerCount < 4) {
       socket.join(data.name);
       roomNames[data.name].playersInLobby[roomNames[data.name].playerCount] = data.user;
-      roomNames[data.name].playerCount += 1;
       socket.emit('ReceiveFindRoomCheck', {
         success: true,
         index: roomNames[data.name].playerCount,
@@ -65,6 +64,7 @@ const onSetupSockets = (sock) => {
         host: roomNames[data.name].host,
         room: data.name,
       });
+      roomNames[data.name].playerCount += 1;  
       console.log(`Found Room: ${data.name}`);
       socket.to(data.name).emit('NewRoomMember', roomNames[data.name].playersInLobby);
     } else {
@@ -81,7 +81,6 @@ const onSetupSockets = (sock) => {
       if(roomNames[name].playerCount < 4){
          socket.join(name);
         roomNames[name].playersInLobby[roomNames[name].playerCount] = data.user;
-        roomNames[name].playerCount += 1;
         console.log(`Joining Room : ${roomNames[name].name}`);
         socket.emit('ReceiveFindRoomCheck', {
           success: true,
@@ -90,6 +89,7 @@ const onSetupSockets = (sock) => {
           host: roomNames[name].host,
           room: name,
         });
+        roomNames[name].playerCount += 1;
         socket.to(name).emit('NewRoomMember', roomNames[name].playersInLobby);
       }
     }
