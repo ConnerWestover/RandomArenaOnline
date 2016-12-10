@@ -7,7 +7,10 @@ function timerCall(){
 	return n;
 }
 
+var itemsReset = false;
+
 //-----------Positive-----------
+/*
 var OnFire = {
 	x: 0,
 	y: 0,
@@ -21,8 +24,9 @@ var OnFire = {
 		app.main.playerOnFire = !app.main.playerOnFire;
 	}
 };
+*/
 
-var RangeUp = {
+var rangeUp = {
 	x: 0,
 	y: 0,
 	name: "Range Up",
@@ -31,24 +35,97 @@ var RangeUp = {
 	onGround: false,
 	active: false,
 	image: undefined,
-	beingUsed: false,
-	timeActive: 0,
+	//beingUsed: false,
+	//timeActive: 0,
 	doEffect: function(player){
 		if(this.beingUsed == false){
-			this.timeActive = timerCall();
+			//this.timeActive = timerCall();
 			player.maxDistance += 20;
-			this.beingUsed = true;
+			//this.beingUsed = true;
 			this.active = false;
 			console.log("Range Up");
-		}else{
+		}else if (itemsReset == true){
 			player.maxDistance -= 20;
-			this.beingUsed = false;
+			//this.beingUsed = false;
 			this.timeActive = 0;
 		}
-		
 	}
 };
 
+var ammoUp = {
+	x: 0, 
+	y: 0,
+	name: "Ammo Up",
+	description: "shoot more",
+	radius: 20, 
+	onGround: false,
+	active: false,
+	image: undefined,
+	doEffect: function(player){
+		if(this.beingUsed == false){
+			player.maxBullets *= 2;
+			this.active = false;
+			console.log("Ammo Up");
+		}else if(itemsReset == true){
+			player.maxBullets /= 2;
+			this.timeActive = 0;
+		}
+	}
+};
+
+var reloadDown = {
+	x: 0, 
+	y: 0,
+	name: "Reload Down",
+	description: "shorter reload",
+	radius: 20,
+	onGround: false,
+	active: false,
+	image: undefined,
+	doEffect: function(player){
+		if(this.beingUsed == false){
+			player.reloadTime /= 2;
+			this.active = false;
+			console.log("Reload Down");
+		}else if(itemsReset == true){
+			player.reloadTime *= 2;
+			this.timeActive = 0
+		}
+	}
+};
+
+var damageUp = {
+	x: 0, 
+	y: 0,
+	name: "Damage Up",
+	description: "Moar DPS",
+	radius: 20,
+	onGround: false,
+	active: false,
+	image: undefined,
+	doEffect: function(player){
+		if(this.beingUsed == false){
+			if(player.startingClass == 1){
+				player.attackPower += .5;
+			}else{
+				player.attackPower += 1;
+			}
+			this.active = false;
+			console.log("Reload Down");
+		}else if(itemsReset == true){
+			if(player.startingClass == 1){
+				player.attackPower -= .5;
+			}else{
+				player.attackPower -= 1;
+			}
+			this.timeActive = 0
+		}
+	}
+};
+
+
+
+/*
 var BulletSizeUp = {
 	x: 0,
 	y: 0,
@@ -74,7 +151,9 @@ var BulletSizeUp = {
 		}
 	}
 };
+*/
 
+/*
 var SlowEnemy = {
 	x: 0,
 	y: 0,
@@ -107,7 +186,9 @@ var SlowEnemy = {
 		}
 	}
 };
+*/
 //-----------Negative-----------
+/*
 var EnemyFiresBulletsLethal = {
 	x: 0,
 	y: 0,
@@ -150,6 +231,7 @@ var RangeDown = {
 		}
 	}
 };
+
 
 var SlowAll = {
 	x: 0,
@@ -212,6 +294,7 @@ var BulletSizeDown = {
 	}
 };
 
+
 //-----------Neutral------------
 var EnemyFiresBulletsNonLethal = {
 	x: 0,
@@ -255,6 +338,7 @@ var NegativeColor = {
 		}
 	}
 };
+*/
 
 var EnemySizeUp = {
 	x: 0,
@@ -276,6 +360,7 @@ var EnemySizeUp = {
 	}
 };
 
+/*
 var EnemySizeDown = {
 	x: 0,
 	y: 0,
@@ -369,6 +454,7 @@ var EveryoneSizeDown = {
 		console.log("Everyone Size Down");
 	}
 };
+*/
 
 //Health
 
@@ -436,5 +522,5 @@ var HealthDown = {
 	}
 };
 
-var myTemporaryItems = [OnFire, EnemyFiresBulletsLethal, EnemyFiresBulletsNonLethal, RangeUp, RangeDown, SlowEnemy, SlowAll, NegativeColor, BulletSizeDown, BulletSizeUp,EnemySizeUp,EnemySizeDown,PlayerSizeUp,PlayerSizeDown, EveryoneSizeUp, EveryoneSizeDown];
+var myTemporaryItems = [ RangeUp, EnemySizeUp];
 

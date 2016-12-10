@@ -852,6 +852,7 @@
           app.main.timePutOnScreen = data.itemTime;
           app.main.itemText = data.itemText;
           app.main.descriptionText = data.itemDescription;
+					itemsReset = data.itemsReset;
           app.main.update();
         });
         
@@ -893,6 +894,7 @@
           app.main.roundScore = 0;
           app.main.numEnemies += (5 * app.main.numPlayers);
           app.main.enemies = app.main.makeEnemy(app.main.numEnemies);
+					itemsReset = true;
           // - SERVER HERE -
           // - SEND RESET TO PARTY IF HOST
       },
@@ -1033,6 +1035,7 @@
 
               if(app.main.gameState != app.main.GAME_STATE.ROUND_OVER){
                   app.main.drawOnGroundItems(app.main.ctx);
+									itemsReset == false;
               }
               //draw things
               if (app.main.gameState == app.main.GAME_STATE.DEFAULT){
@@ -1074,6 +1077,7 @@
             itemTime: app.main.timePutOnScreen,
             itemText: app.main.itemText,
             itemDescription: app.main.descriptionText,
+						itemsReset: itemsReset,
           };
           socket.emit('HostUpdatesGameInfo', info);
         }
@@ -1444,7 +1448,7 @@
 			p.attackPower = 0.5;
 			p.maxBullets = 50;
 			p.fireRate = 150;
-			p.reloadTime = 300;
+			p.reloadTime = 1500;
 		}else if (p.startingClass == 2){
 			p.weapon = "Pistol";
 			p.speed = 150;
@@ -1453,7 +1457,7 @@
 			p.attackPower = 2;
 			p.maxBullets = 10;
 			p.fireRate = 600;
-			p.reloadTime = 300;
+			p.reloadTime = 1500;
 		}else{
 			p.weapon = "Sniper Rifle";
 			p.speed = 150
@@ -1462,7 +1466,7 @@
 			p.attackPower = 5;
 			p.maxBullets = 8;
 			p.fireRate = 1500;
-			p.reloadTime = 300;
+			p.reloadTime = 1500;
 		}
 		
 		return p;
@@ -2066,296 +2070,130 @@
   
   <script>
   function timerCall(){
-	var d = new Date();
-	var n = d.getTime();
-	return n;
+		var d = new Date();
+		var n = d.getTime();
+		return n;
   }
+		
+	var itemsReset = false;
 
-  //-----------Positive-----------
-  var OnFire = {
-      x: 0,
-      y: 0,
-      name: "On Fire",
-      description: "YOU'RE ON FIRE",
-      radius: 20,
-      onGround: false,
-      doEffect: function(player, enemy){
-          app.main.playerOnFire = !app.main.playerOnFire;
-      }
-  };
-
+  // look to items.js for old powerups
   var RangeUp = {
-      x: 0,
-      y: 0,
-      name: "Range Up",
-      description: "shoot farther",
-      radius: 20,
-      doEffect: function(player){
-          player.maxDistance += 20;
-          console.log("Range Up");
-      }
-  };
-    
-  var FireRateUp = {
-      x: 0,
-      y: 0,
-      name: "Hot Clip",
-      description: "You Shoot Faster",
-      radius: 20,
-      doEffect: function(player){
-          player.fireRate *= 4/5;
-          console.log("FireRateUp");
-      }
-  };
+		x: 0,
+		y: 0,
+		name: "Range Up",
+		description: "shoot farther",
+		radius: 20,
+		onGround: false,
+		active: false,
+		image: undefined,
+		//beingUsed: false,
+		//timeActive: 0,
+		doEffect: function(player){
+			if(this.beingUsed == false){
+				//this.timeActive = timerCall();
+				player.maxDistance += 20;
+				//this.beingUsed = true;
+				this.active = false;
+				console.log("Range Up");
+			}else if (itemsReset == true){
+				player.maxDistance -= 20;
+				//this.beingUsed = false;
+				this.timeActive = 0;
+			}
+		}
+	};
 
-  var BulletSizeUp = {
-      x: 0,
-      y: 0,
-      name: "Bullet Up",
-      description: "larger bullets",
-      radius: 20,
-      onGround: false,
-      doEffect: function(player){
-          player.bulletSize += 1;
-      }
-  };
+	var ammoUp = {
+		x: 0, 
+		y: 0,
+		name: "Ammo Up",
+		description: "shoot more",
+		radius: 20, 
+		onGround: false,
+		active: false,
+		image: undefined,
+		doEffect: function(player){
+			if(this.beingUsed == false){
+				player.maxBullets *= 2;
+				this.active = false;
+				console.log("Ammo Up");
+			}else if(itemsReset == true){
+				player.maxBullets /= 2;
+				this.timeActive = 0;
+			}
+		}
+	};
 
-  var SlowEnemy = {
-      x: 0,
-      y: 0,
-      name: "Slow Enemy",
-      description: "enemies are hindered",
-      radius: 20,
-      onGround: false,
-      doEffect: function(){
-          for(var i = 0; i < app.main.enemies.length; i++){
-              var e = app.main.enemies[i];
-              e.speed = e.speed*(4/5);
-          }
-          console.log("Slow Enemy");
-      }
-  };
-    
-  var SpeedUp = {
-      x: 0,
-      y: 0,
-      name: "Slow Enemy",
-      description: "enemies are hindered",
-      radius: 20,
-      onGround: false,
-      doEffect: function(player){
-          player.speed = player.speed*(5/4);
-          console.log("SpeedUp");
-      }
-  };
-    
-  var SpeedUpAll = {
-      x: 0,
-      y: 0,
-      name: "Slow Enemy",
-      description: "enemies are hindered",
-      radius: 20,
-      onGround: false,
-      doEffect: function(){
-          for (var p = 0; p < app.main.players.length; p++){
-              app.main.players[p].speed = app.main.players[p].speed*(5/4);
-            }
-          console.log("SpeedUpAllPlayers");
-      }
-  };
-  //-----------Negative-----------
-  var EnemyFiresBulletsLethal = {
-      x: 0,
-      y: 0,
-      name: "Enemies Spit Bullets",
-      description: "LOOKOUT!",
-      radius: 20,
-      onGround: false,
-      doEffect: function(player){
-          app.main.eBullActive = true;
-          app.main.eBullLethal = true;
-      }
-  };
+	var reloadDown = {
+		x: 0, 
+		y: 0,
+		name: "Reload Down",
+		description: "shorter reload",
+		radius: 20,
+		onGround: false,
+		active: false,
+		image: undefined,
+		doEffect: function(player){
+			if(this.beingUsed == false){
+				player.reloadTime /= 2;
+				this.active = false;
+				console.log("Reload Down");
+			}else if(itemsReset == true){
+				player.reloadTime *= 2;
+				this.timeActive = 0
+			}
+		}
+	};
 
-  var RangeDown = {
-      x: 0,
-      y: 0,
-      name: "Range Down",
-      description: "shoot not so far",
-      radius: 20,
-      doEffect: function(player){
-          player.maxDistance -= 20;
-          console.log("Range Down");
-      }
-  };
-    
-  var FireRateDown = {
-      x: 0,
-      y: 0,
-      name: "Cold Trigger",
-      description: "You Shoot Slower",
-      radius: 20,
-      doEffect: function(player){
-          player.fireRate *= 5/4;
-          console.log("FireRateDown");
-      }
-  };
-
-  var SlowAll = {
-      x: 0,
-      y: 0,
-      name: "Slow Down",
-      description: "everything gets slower",
-      radius: 20,
-      doEffect: function(player){
-            for(var i = 0; i < app.main.enemies.length; i++){
-                var e = app.main.enemies[i];
-                e.speed = e.speed*(4/5);
-            }
-            for (var p = 0; p < app.main.players.length; p++){
-              app.main.players[p].speed = app.main.players[p].speed*(4/5);
-            }
-            console.log("Slow All");
-      }
-  };
-
-  var BulletSizeDown = {
-      x: 0,
-      y: 0,
-      name: "Bullet Down",
-      description: "smaller bullets",
-      radius: 20,
-      onGround: false,
-      timeActive: 0,
-      doEffect: function(player){
-          app.main.bulletSize -= 1;
-          console.log("Bullet Down");
-      }
-  };
-
-  //-----------Neutral------------
-  var EnemyFiresBulletsNonLethal = {
-      x: 0,
-      y: 0,
-      name: "Enemies Spit Bullets",
-      description: "...nerf bullets",
-      radius: 20,
-      onGround: false,
-      doEffect: function(player){
-          app.main.eBullActive = true;
-          app.main.eBullLethal = false;
-      }
-  };
-
-  var EnemySizeUp = {
-      x: 0,
-      y: 0,
-      name: "Enemy Size Up",
-      description: "David vs Goliaths",
-      radius: 20,
-      onGround: false,
-      doEffect: function(player){
-          app.main.ENEMY_RADIUS+=4;
-          for (var i = 0; i < app.main.enemies.length; i++){
-              var e = app.main.enemies[i];
-              e.radius = app.main.ENEMY_RADIUS;
-          }
-          console.log("Enemy Size Up");
-      }
-  };
-
-  var EnemySizeDown = {
-      x: 0,
-      y: 0,
-      name: "Enemy Size Down",
-      description: "Goliath vs Davids",
-      radius: 20,
-      onGround: false,
-      doEffect: function(player){
-          app.main.ENEMY_RADIUS-=4;
-          if(app.main.ENEMY_RADIUS < 1){
-            app.main.ENEMY_RADIUS = 1;
-          }
-          for (var i = 0; i < app.main.enemies.length; i++){
-              var e = app.main.enemies[i];
-              e.radius = app.main.ENEMY_RADIUS;
-          }
-          app.main.active = false;
-          console.log("Enemy Size Down");
-      }
-  };
-
-  var PlayerSizeUp = {
-      x: 0,
-      y: 0,
-      name: "Player Size Up",
-      description: "stop eating so much",
-      radius: 20,
-      onGround: false,
-      doEffect: function(player){
-          player.radius +=4;
-          console.log("Player Size Up");
-      }
-  };
-
-  var PlayerSizeDown = {
-      x: 0,
-      y: 0,
-      name: "Player Size Down",
-      description: "you should eat more",
-      radius: 20,
-      onGround: false,
-      doEffect: function(player){
-          player.radius -= 4;
-          if(player.radius < 1){
-            player.radius = 1;
-          }
-          console.log("Player Size Down");
-      }
-  };
-
-  var EveryoneSizeUp = {
-      x: 0,
-      y: 0,
-      name: "SIZE UP",
-      description: "is the room shrinking?",
-      radius: 20,
-      onGround: false,
-      doEffect: function(player){
-          app.main.ENEMY_RADIUS+=4;
-          for (var i = 0; i < app.main.enemies.length; i++){
-              var e = app.main.enemies[i];
-              e.radius = app.main.ENEMY_RADIUS;
-          }
-          console.log("Everyone Size Up");
-      }
-  };
-
-
-
-  var EveryoneSizeDown = {
-      x: 0,
-      y: 0,
-      name: "SIZE DOWN",
-      description: "everything feels... bigger",
-      radius: 20,
-      onGround: false,
-      doEffect: function(player){
-          app.main.ENEMY_RADIUS-=4;
-          if(app.main.ENEMY_RADIUS < 1){
-            app.main.ENEMY_RADIUS = 1;
-          }
-          player.radius -= 4;
-          if(player.radius < 1){
-            player.radius = 1;
-          }
-          for (var i = 0; i < app.main.enemies.length; i++){
-              var e = app.main.enemies[i];
-              e.radius = app.main.ENEMY_RADIUS;
-          }
-          console.log("Everyone Size Down");
-      }
-  };
+	var damageUp = {
+		x: 0, 
+		y: 0,
+		name: "Damage Up",
+		description: "Moar DPS",
+		radius: 20,
+		onGround: false,
+		active: false,
+		image: undefined,
+		doEffect: function(player){
+			if(this.beingUsed == false){
+				if(player.startingClass == 1){
+					player.attackPower += .5;
+				}else{
+					player.attackPower += 1;
+				}
+				this.active = false;
+				console.log("Reload Down");
+			}else if(itemsReset == true){
+				if(player.startingClass == 1){
+					player.attackPower -= .5;
+				}else{
+					player.attackPower -= 1;
+				}
+				this.timeActive = 0
+			}
+		}
+	};
+		
+	var EnemySizeUp = {
+		x: 0,
+		y: 0,
+		name: "Enemy Size Up",
+		description: "David vs Goliaths",
+		radius: 20,
+		onGround: false,
+		active: false,
+		image: undefined,
+		doEffect: function(player){
+			app.main.ENEMY_RADIUS+=4;
+			for (var i = 0; i < app.main.enemies.length; i++){
+				var e = app.main.enemies[i];
+				e.radius = app.main.ENEMY_RADIUS;
+			}
+			this.active = false;
+			console.log("Enemy Size Up");
+		}
+	};
 
   //Health
 
@@ -2415,7 +2253,7 @@
       }
   };
 
-  var myTemporaryItems = [OnFire, EnemyFiresBulletsLethal, EnemyFiresBulletsNonLethal, RangeUp, RangeDown, SlowEnemy, SlowAll, SpeedUp, SpeedUpAll, BulletSizeDown, FireRateDown, FireRateUp, BulletSizeUp, EnemySizeUp, EnemySizeDown, PlayerSizeUp, PlayerSizeDown, EveryoneSizeUp, EveryoneSizeDown];
+  var myTemporaryItems = [rangeUp, ammoUp, reloadDown, damageUp, EnemySizeUp];
 
   </script>
   
