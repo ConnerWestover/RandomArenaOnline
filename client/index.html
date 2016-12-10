@@ -815,7 +815,7 @@
           app.main.gameState = data.state;
           app.main.itemsOnGround = data.items;
           
-          app.main.intervalUpdateID = window.setInterval(app.main.update, 1000/60);
+          app.main.update();
         });
         
         socket.on('HostReceivesUserInput', (data)=>{
